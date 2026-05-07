@@ -1,40 +1,5 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-05-07T09:30:00.000Z",
-  "reports": [
-    {
-      "runId": "mock-testnet-success-001",
-      "scenario": "testnet-single",
-      "status": "success",
-      "startedAt": "2026-05-07T09:00:00.000Z",
-      "endedAt": "2026-05-07T09:08:14.210Z",
-      "durationMs": 494210,
-      "generatedAt": "2026-05-07T09:08:14.240Z",
-      "source": "ci",
-      "file": "reports/2026-05-07T09-08-14-240Z-testnet-single-mock-testnet-success-001.json"
-    },
-    {
-      "runId": "mock-local-success-001",
-      "scenario": "local-multi-node",
-      "status": "success",
-      "startedAt": "2026-05-06T09:00:00.000Z",
-      "endedAt": "2026-05-06T09:12:33.870Z",
-      "durationMs": 753870,
-      "generatedAt": "2026-05-06T09:12:33.900Z",
-      "source": "ci",
-      "file": "reports/2026-05-06T09-12-33-900Z-local-multi-node-mock-local-success-001.json"
-    },
-    {
-      "runId": "mock-testnet-failed-001",
-      "scenario": "testnet-single",
-      "status": "failed",
-      "startedAt": "2026-05-05T09:00:00.000Z",
-      "endedAt": "2026-05-05T09:04:42.315Z",
-      "durationMs": 282315,
-      "lastError": "Mock failure: ChannelReady timeout",
-      "generatedAt": "2026-05-05T09:04:42.350Z",
-      "source": "ci",
-      "file": "reports/2026-05-05T09-04-42-350Z-testnet-single-mock-testnet-failed-001.json"
-    }
-  ]
+  "updatedAt": "1970-01-01T00:00:00.000Z",
+  "reports": []
 }
