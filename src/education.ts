@@ -187,6 +187,42 @@ export const STEP_LESSONS: Record<StepId, StepLesson> = {
       "Attempts payments between every ordered local node pair. This turns graph knowledge into routing behavior.",
     observe: "Failures identify liquidity or route gaps between specific source and target nodes."
   },
+  "local-stop": {
+    concept: "Batch lifecycle",
+    rpc:
+      "Not JSON-RPC. Call Fiber.stop() for every local Fiber instance while keeping each databasePrefix intact.",
+    meaning:
+      "Stops all browser-side local nodes without deleting their IndexedDB state. This creates a realistic page/session interruption.",
+    observe:
+      "No node should lose its funded channels here; this step only stops runtime processes."
+  },
+  "local-restart": {
+    concept: "Batch persistence",
+    rpc:
+      "Not JSON-RPC. Recreate each local Fiber instance and call Fiber.start(...) with the same key pair and databasePrefix from Local nodes JSON.",
+    meaning:
+      "Restarts every local node from persisted IndexedDB state so the scenario can test multi-node recovery.",
+    observe:
+      "Each restarted node should come back with the same pubkey it had before stop."
+  },
+  "local-restart-recovery": {
+    concept: "Multi-node recovery",
+    rpc:
+      "For each restarted local node, poll list_peers [] and list_channels [{ pubkey: externalPeerPubkey, include_closed: true }] until the external peer and a ChannelReady channel are visible.",
+    meaning:
+      "Checks that every local node can recover peer and channel state after restart, not just the first node.",
+    observe:
+      "If one node fails recovery, compare its databasePrefix, Fiber key, externalPeerPubkey, and per-node RPC log."
+  },
+  "local-restart-payment": {
+    concept: "Post-restart routing",
+    rpc:
+      "After recovery, repeat dry-run send_payment, send_payment, and get_payment polling for every source-target local node pair.",
+    meaning:
+      "Proves the recovered local channels are not only visible but still usable for cross-node payments.",
+    observe:
+      "A successful batch here confirms that local multi-node restart preserved routing and liquidity behavior."
+  },
   "local-shutdown": {
     concept: "Batch close",
     rpc:

@@ -884,6 +884,8 @@ function metricCards(state?: FlowRunState, scenario: FlowConfig["scenario"] = "t
           ["Graph sync", formatMs(metrics.localGraphSyncMs)],
           ["Pair payments", valueOrDash(metrics.localPaymentCount)],
           ["Payment batch", formatMs(metrics.sendPaymentMs)],
+          ["Restart recovery", formatMs(metrics.localRestartRecoveryMs)],
+          ["Restart payment", formatMs(metrics.localRestartPaymentMs)],
           ["Shutdown", formatMs(metrics.shutdownMs)]
         ]
       : [

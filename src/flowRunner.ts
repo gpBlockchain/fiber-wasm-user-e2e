@@ -12,6 +12,7 @@ import type { FlowCallbacks, FlowConfig, FlowRunState, FlowStep, RpcLog, StepId 
 export class FlowRunner {
   private readonly client = new FiberClient("primary", (entry) => this.addRpcLog(entry));
   private readonly localClients: FiberClient[] = [];
+  private localClientNames: string[] = [];
   private state: FlowRunState;
 
   constructor(private readonly callbacks: FlowCallbacks) {
@@ -163,6 +164,7 @@ export class FlowRunner {
         const nodeName = localNode.name || `local-${index + 1}`;
         const client = new FiberClient(nodeName, (entry) => this.addRpcLog(entry));
         this.localClients.push(client);
+        this.localClientNames.push(nodeName);
         await client.startFiber({
           ...config,
           fiberSecretKeyHex: localNode.fiberSecretKeyHex,
@@ -289,34 +291,79 @@ export class FlowRunner {
 
     const payments = await this.runStep<Array<Record<string, unknown>>>(
       "local-send-payments",
-      async () => {
-        const results = [];
-        for (let from = 0; from < this.localClients.length; from += 1) {
-          for (let to = 0; to < this.localClients.length; to += 1) {
-            if (from === to) {
-              continue;
-            }
-
-            const src = this.localClients[from];
-            const targetPubkey = stringValue(nodeInfos[to].pubkey);
-            const result = await this.sendPaymentAndWaitWithClient(
-              src,
-              targetPubkey,
-              config.paymentAmount,
-              config
-            );
-            results.push({
-              from: config.localNodes[from]?.name || `local-${from + 1}`,
-              to: config.localNodes[to]?.name || `local-${to + 1}`,
-              result
-            });
-          }
-        }
-        return results;
-      }
+      () => this.sendPaymentsBetweenLocalNodes(nodeInfos, config)
     );
     this.state.metrics.localPaymentCount = payments.length;
     this.state.metrics.sendPaymentMs = this.stepDuration("local-send-payments");
+
+    await this.runStep("local-stop", async () => {
+      const stopped = [];
+      for (const [index, client] of this.localClients.entries()) {
+        await client.stopFiber();
+        stopped.push({
+          node: this.localClientNames[index] || `local-${index + 1}`
+        });
+      }
+      return stopped;
+    });
+
+    await this.runStep("local-restart", async () => {
+      await this.resetLocalClients();
+      const restarted = [];
+      for (const [index, localNode] of config.localNodes.entries()) {
+        const nodeName = localNode.name || `local-${index + 1}`;
+        const client = new FiberClient(nodeName, (entry) => this.addRpcLog(entry));
+        this.localClients.push(client);
+        this.localClientNames.push(nodeName);
+        const databasePrefix = localNode.databasePrefix || `${config.databasePrefix}-${nodeName}`;
+        await client.startFiber({
+          ...config,
+          fiberSecretKeyHex: localNode.fiberSecretKeyHex,
+          ckbSecretKeyHex: localNode.ckbSecretKeyHex,
+          databasePrefix
+        });
+        const nodeInfo = await client.nodeInfo<Record<string, unknown>>();
+        const expectedPubkey = stringValue(nodeInfos[index].pubkey);
+        const actualPubkey = stringValue(nodeInfo.pubkey);
+        if (expectedPubkey && actualPubkey !== expectedPubkey) {
+          throw new Error(
+            `${nodeName} restarted with unexpected pubkey ${actualPubkey}, expected ${expectedPubkey}.`
+          );
+        }
+        restarted.push({
+          node: nodeName,
+          databasePrefix,
+          pubkey: actualPubkey
+        });
+      }
+      return restarted;
+    });
+
+    await this.runStep("local-restart-recovery", async () => {
+      const recovered = [];
+      for (const [index, client] of this.localClients.entries()) {
+        const localNode = config.localNodes[index];
+        const result = await this.waitForRestartRecoveryWithClient(
+          client,
+          localNode.externalPeerPubkey,
+          config
+        );
+        recovered.push({
+          node: localNode.name || `local-${index + 1}`,
+          externalPeerPubkey: localNode.externalPeerPubkey,
+          result
+        });
+      }
+      return recovered;
+    });
+    this.state.metrics.localRestartRecoveryMs = this.stepDuration("local-restart-recovery");
+
+    const restartPayments = await this.runStep<Array<Record<string, unknown>>>(
+      "local-restart-payment",
+      () => this.sendPaymentsBetweenLocalNodes(nodeInfos, config)
+    );
+    this.state.metrics.localRestartPaymentMs = this.stepDuration("local-restart-payment");
+    this.state.metrics.localPaymentCount += restartPayments.length;
 
     await this.runStep("local-shutdown", async () => {
       const results = [];
@@ -331,6 +378,36 @@ export class FlowRunner {
   private async resetLocalClients(): Promise<void> {
     await Promise.allSettled(this.localClients.map((client) => client.stopFiber()));
     this.localClients.length = 0;
+    this.localClientNames.length = 0;
+  }
+
+  private async sendPaymentsBetweenLocalNodes(
+    nodeInfos: Array<Record<string, unknown>>,
+    config: FlowConfig
+  ): Promise<Array<Record<string, unknown>>> {
+    const results = [];
+    for (let from = 0; from < this.localClients.length; from += 1) {
+      for (let to = 0; to < this.localClients.length; to += 1) {
+        if (from === to) {
+          continue;
+        }
+
+        const src = this.localClients[from];
+        const targetPubkey = stringValue(nodeInfos[to].pubkey);
+        const result = await this.sendPaymentAndWaitWithClient(
+          src,
+          targetPubkey,
+          config.paymentAmount,
+          config
+        );
+        results.push({
+          from: config.localNodes[from]?.name || `local-${from + 1}`,
+          to: config.localNodes[to]?.name || `local-${to + 1}`,
+          result
+        });
+      }
+    }
+    return results;
   }
 
   private async connectPeerAndWait(config: FlowConfig): Promise<Record<string, unknown>> {
@@ -488,13 +565,21 @@ export class FlowRunner {
   }
 
   private async waitForRestartRecovery(config: FlowConfig): Promise<Record<string, unknown>> {
+    return this.waitForRestartRecoveryWithClient(this.client, config.peerPubkey, config);
+  }
+
+  private async waitForRestartRecoveryWithClient(
+    client: FiberClient,
+    pubkey: string,
+    config: FlowConfig
+  ): Promise<Record<string, unknown>> {
     return poll(
       async () => {
         const [peers, channels] = await Promise.all([
-          this.client.listPeers(),
-          this.client.listChannels(config.peerPubkey)
+          client.listPeers(),
+          client.listChannels(pubkey)
         ]);
-        const peerRecovered = peers.peers.some((peer) => peer.pubkey === config.peerPubkey);
+        const peerRecovered = peers.peers.some((peer) => peer.pubkey === pubkey);
         const channelRecovered = channels.channels.some(
           (channel) => stateName(channel) === "ChannelReady"
         );

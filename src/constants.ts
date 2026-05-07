@@ -117,6 +117,10 @@ export const LOCAL_MULTI_NODE_STEP_DEFINITIONS = [
   ["local-channel-ready", "Wait local channels ready"],
   ["local-graph-sync", "Wait cross-node graph sync"],
   ["local-send-payments", "Send payments between local nodes"],
+  ["local-stop", "Stop Fiber"],
+  ["local-restart", "Restart Fiber"],
+  ["local-restart-recovery", "Recover peers/channels"],
+  ["local-restart-payment", "Send payment after restart"],
   ["local-shutdown", "Shutdown local nodes"]
 ] as const;
 

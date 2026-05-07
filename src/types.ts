@@ -22,6 +22,8 @@ export interface FlowMetrics {
   localConnectPeersMs?: number;
   localChannelReadyMs?: number;
   localGraphSyncMs?: number;
+  localRestartRecoveryMs?: number;
+  localRestartPaymentMs?: number;
   graphChannelCount?: number;
   connectPeerMs?: number;
   channelReadyMs?: number;
