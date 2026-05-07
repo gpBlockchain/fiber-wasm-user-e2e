@@ -400,9 +400,10 @@ function createScenarioDraft(scenario: FlowScenario): ScenarioDraft {
     fiberSecretKey: randomSecretKeyHex(),
     ckbSecretKey: randomSecretKeyHex(),
     databasePrefix,
-    peerPubkey: "",
+    peerPubkey: scenario === "testnet-single" ? DEFAULT_FORM_VALUES.testnetPeerPubkey : "",
     fundingAmount: DEFAULT_FORM_VALUES.fundingAmount,
-    paymentTargetPubkey: "",
+    paymentTargetPubkey:
+      scenario === "testnet-single" ? DEFAULT_FORM_VALUES.testnetPaymentTargetPubkey : "",
     paymentAmount: DEFAULT_FORM_VALUES.paymentAmount,
     localNodeCount: String(DEFAULT_FORM_VALUES.localNodeCount),
     localNodesJson: JSON.stringify(
