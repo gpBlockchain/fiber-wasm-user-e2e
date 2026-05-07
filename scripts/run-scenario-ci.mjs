@@ -1,32 +1,33 @@
-import { spawn } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { chromium } from "playwright";
+import { createServer } from "vite";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const reportsDir = path.join(rootDir, "public", "reports");
 const reportIndexPath = path.join(reportsDir, "index.json");
 const port = Number(process.env.CI_VITE_PORT ?? 5173);
-const baseUrl = `http://127.0.0.1:${port}`;
+const baseUrl = `http://127.0.0.1:${port}/fiber-wasm-user-e2e/`;
 const scenario = process.env.CI_SCENARIO ?? "testnet-single";
 const timeoutMs = Number(process.env.CI_SCENARIO_TIMEOUT_MS ?? 30 * 60 * 1000);
 
-let server;
+let viteServer;
 let browser;
 
 try {
   await mkdir(reportsDir, { recursive: true });
-  server = spawn("npm", ["run", "dev", "--", "--host", "127.0.0.1", "--port", String(port)], {
-    cwd: rootDir,
-    detached: process.platform !== "win32",
-    stdio: ["ignore", "pipe", "pipe"]
+  viteServer = await createServer({
+    root: rootDir,
+    server: {
+      host: "127.0.0.1",
+      port,
+      strictPort: true
+    }
   });
-  server.stdout.on("data", (chunk) => process.stdout.write(chunk));
-  server.stderr.on("data", (chunk) => process.stderr.write(chunk));
-
-  await waitForServer(baseUrl);
+  await viteServer.listen();
+  viteServer.printUrls();
 
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
@@ -49,7 +50,7 @@ try {
   console.log(`Wrote ${path.relative(rootDir, filePath)}`);
 } finally {
   await browser?.close();
-  await stopServer(server);
+  await viteServer?.close();
 }
 
 async function applyEnvironmentConfig(page) {
@@ -115,54 +116,4 @@ async function readReportIndex() {
 function createReportFileName(report) {
   const timestamp = report.generatedAt.replace(/[:.]/g, "-");
   return `${timestamp}-${report.summary.scenario}-${report.summary.runId}.json`;
-}
-
-async function waitForServer(url) {
-  const deadline = Date.now() + 60_000;
-  while (Date.now() < deadline) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) {
-        return;
-      }
-    } catch {
-      // Vite is still starting.
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500));
-  }
-  throw new Error(`Timed out waiting for ${url}`);
-}
-
-async function stopServer(child) {
-  if (!child || child.exitCode !== null || child.signalCode !== null) {
-    return;
-  }
-
-  await new Promise((resolve) => {
-    const forceKillTimer = setTimeout(() => {
-      killChildProcess(child, "SIGKILL");
-      resolve();
-    }, 5_000);
-
-    child.once("close", () => {
-      clearTimeout(forceKillTimer);
-      resolve();
-    });
-
-    killChildProcess(child, "SIGTERM");
-  });
-}
-
-function killChildProcess(child, signal) {
-  try {
-    if (process.platform !== "win32" && child.pid) {
-      process.kill(-child.pid, signal);
-      return;
-    }
-    child.kill(signal);
-  } catch (error) {
-    if (error?.code !== "ESRCH") {
-      console.warn(`Failed to stop Vite dev server with ${signal}: ${error.message}`);
-    }
-  }
 }
