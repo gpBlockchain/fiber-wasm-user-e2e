@@ -43,6 +43,14 @@ app.innerHTML = `
           </button>
         </div>
 
+        <label>
+          Scenario
+          <select id="scenario">
+            <option value="testnet-single">Testnet single node</option>
+            <option value="local-multi-node">Local multi-node</option>
+          </select>
+        </label>
+
         <label data-scenario-field="testnet-single">
           Fiber secret key
           <input id="fiber-secret-key" autocomplete="off" spellcheck="false" />
@@ -73,17 +81,9 @@ app.innerHTML = `
           <input id="payment-target-pubkey" autocomplete="off" placeholder="Defaults to peer pubkey" />
         </label>
 
-        <label>
+        <label data-scenario-field="testnet-single">
           Payment amount (shannon)
           <input id="payment-amount" inputmode="numeric" />
-        </label>
-
-        <label>
-          Scenario
-          <select id="scenario">
-            <option value="testnet-single">Testnet single node</option>
-            <option value="local-multi-node">Local multi-node</option>
-          </select>
         </label>
 
         <label data-scenario-field="local-multi-node">
