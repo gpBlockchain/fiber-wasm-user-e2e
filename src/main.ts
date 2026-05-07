@@ -255,15 +255,23 @@ app.innerHTML = `
             Refresh
           </button>
         </div>
+        <section class="history-trend-panel">
+          <div class="duration-board-head">
+            <h3>历史耗时趋势</h3>
+            <span id="history-trend-caption">按生成时间对比每次运行总耗时</span>
+          </div>
+          <div class="history-trend" id="history-trend"></div>
+        </section>
         <div class="history-grid">
           <div class="history-list" id="history-list"></div>
           <div class="history-json-panel">
             <div class="panel-head">
-              <h2>Report JSON</h2>
+              <h2>报告详情</h2>
               <button class="icon-button" id="copy-history-json" type="button" title="Copy selected report JSON">
                 <i data-lucide="copy"></i>
               </button>
             </div>
+            <div class="history-summary" id="history-summary"></div>
             <pre id="history-json">{}</pre>
           </div>
         </div>
@@ -316,7 +324,10 @@ const elements = {
   rawJson: byId("raw-json"),
   latestReportJson: byId<HTMLScriptElement>("latest-report-json"),
   refreshHistory: byId<HTMLButtonElement>("refresh-history"),
+  historyTrend: byId("history-trend"),
+  historyTrendCaption: byId("history-trend-caption"),
   historyList: byId("history-list"),
+  historySummary: byId("history-summary"),
   historyJson: byId("history-json"),
   copyHistoryJson: byId<HTMLButtonElement>("copy-history-json")
 };
@@ -1016,6 +1027,9 @@ function renderReportState(state: FlowRunState): void {
 
 async function renderHistoryView(): Promise<void> {
   elements.historyList.innerHTML = `<div class="empty-log">Loading reports...</div>`;
+  elements.historyTrend.innerHTML = `<div class="empty-log">Loading trend...</div>`;
+  elements.historyTrendCaption.textContent = "按生成时间对比每次运行总耗时";
+  elements.historySummary.innerHTML = "";
   elements.historyJson.textContent = "{}";
 
   const localReports = readLocalReportHistory();
@@ -1036,9 +1050,12 @@ async function renderHistoryView(): Promise<void> {
 
   if (!items.length) {
     elements.historyList.innerHTML = `<div class="empty-log">No history yet.</div>`;
+    elements.historyTrend.innerHTML = `<div class="empty-log">没有历史数据。</div>`;
     return;
   }
 
+  elements.historyTrend.innerHTML = renderHistoryTrend(items);
+  elements.historyTrendCaption.textContent = renderHistoryTrendCaption(items);
   elements.historyList.innerHTML = items.map(renderHistoryItem).join("");
   elements.historyList.querySelectorAll<HTMLButtonElement>("[data-history-key]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -1079,6 +1096,7 @@ async function showHistoryReport(item: HistoryDisplayItem): Promise<void> {
       button instanceof HTMLElement && button.dataset.historyKey === item.key
     );
   });
+  elements.historySummary.innerHTML = renderHistorySummary(activeReport, item.entry);
   elements.historyJson.textContent = JSON.stringify(activeReport, null, 2);
 }
 
@@ -1092,15 +1110,233 @@ async function fetchReportFile(file: string): Promise<unknown> {
 
 function renderHistoryItem(item: HistoryDisplayItem): string {
   const entry = item.entry;
-  const statusClass = entry.status === "success" ? "ok" : entry.status === "failed" ? "bad" : "";
+  const statusClass = historyStatusClass(entry.status);
   return `
     <button class="history-item" data-history-key="${escapeHtml(item.key)}" type="button">
-      <span class="runtime-pill ${statusClass}">${escapeHtml(entry.status)}</span>
-      <strong>${escapeHtml(entry.scenario)}</strong>
-      <span>${escapeHtml(new Date(entry.generatedAt).toLocaleString())}</span>
-      <code>${escapeHtml(entry.source)} · ${escapeHtml(entry.runId)}</code>
+      <span class="history-item-top">
+        <strong>${escapeHtml(formatScenarioName(entry.scenario))}</strong>
+        <span class="status-badge ${statusClass}">${escapeHtml(entry.status)}</span>
+      </span>
+      <span class="history-duration">${escapeHtml(formatDuration(entry.durationMs))}</span>
+      <span class="history-meta-line">${escapeHtml(new Date(entry.generatedAt).toLocaleString())}</span>
+      <code>${escapeHtml(entry.source)} / ${escapeHtml(entry.runId)}</code>
     </button>
   `;
+}
+
+function renderHistoryTrend(items: HistoryDisplayItem[]): string {
+  const points = items
+    .map((item) => item.entry)
+    .filter((entry) => entry.durationMs !== undefined)
+    .sort((left, right) => new Date(left.generatedAt).getTime() - new Date(right.generatedAt).getTime());
+
+  if (!points.length) {
+    return `<div class="empty-log">没有可对比的耗时数据。</div>`;
+  }
+
+  const width = 920;
+  const height = 240;
+  const padding = { top: 24, right: 24, bottom: 42, left: 64 };
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+  const maxDuration = Math.max(...points.map((entry) => entry.durationMs ?? 0), 1);
+  const minDuration = Math.min(...points.map((entry) => entry.durationMs ?? 0), maxDuration);
+  const range = Math.max(1, maxDuration - Math.min(0, minDuration));
+  const coordinates = points.map((entry, index) => {
+    const x =
+      padding.left + (points.length === 1 ? chartWidth / 2 : (index / (points.length - 1)) * chartWidth);
+    const y = padding.top + chartHeight - (((entry.durationMs ?? 0) - Math.min(0, minDuration)) / range) * chartHeight;
+    return { entry, x, y };
+  });
+  const pathData = coordinates
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`)
+    .join(" ");
+  const yTicks = [0, 0.5, 1].map((ratio) => {
+    const value = Math.round(maxDuration * ratio);
+    const y = padding.top + chartHeight - ratio * chartHeight;
+    return { value, y };
+  });
+
+  return `
+    <svg class="trend-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="历史运行总耗时折线图">
+      <g class="trend-grid">
+        ${yTicks
+          .map(
+            (tick) => `
+              <line x1="${padding.left}" y1="${tick.y}" x2="${width - padding.right}" y2="${tick.y}"></line>
+              <text x="${padding.left - 12}" y="${tick.y + 4}" text-anchor="end">${escapeHtml(formatDuration(tick.value))}</text>
+            `
+          )
+          .join("")}
+      </g>
+      <path class="trend-line" d="${pathData}"></path>
+      <g>
+        ${coordinates
+          .map(
+            (point) => `
+              <g class="trend-point ${historyStatusClass(point.entry.status)}">
+                <circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="5"></circle>
+                <title>${escapeHtml(`${formatShortDate(point.entry.generatedAt)} · ${formatScenarioName(point.entry.scenario)} · ${formatDuration(point.entry.durationMs)}`)}</title>
+              </g>
+            `
+          )
+          .join("")}
+      </g>
+      <g class="trend-labels">
+        ${coordinates
+          .map((point, index) => renderTrendDateLabel(point, index, coordinates.length, height))
+          .join("")}
+      </g>
+    </svg>
+    <div class="trend-legend">
+      <span><i class="legend-dot ok"></i>成功</span>
+      <span><i class="legend-dot bad"></i>失败</span>
+      <span>${points.length} 次运行，最快 ${escapeHtml(formatDuration(minDuration))}，最慢 ${escapeHtml(formatDuration(maxDuration))}</span>
+    </div>
+  `;
+}
+
+function renderHistoryTrendCaption(items: HistoryDisplayItem[]): string {
+  const timedItems = items.filter((item) => item.entry.durationMs !== undefined);
+  if (!timedItems.length) {
+    return "等待每天 CI 生成报告后展示趋势";
+  }
+  const latest = timedItems
+    .map((item) => item.entry)
+    .sort((left, right) => new Date(right.generatedAt).getTime() - new Date(left.generatedAt).getTime())[0];
+  return `最新一次 ${formatScenarioName(latest.scenario)}：${formatDuration(latest.durationMs)}`;
+}
+
+function renderTrendDateLabel(
+  point: { entry: ReportIndexEntry; x: number },
+  index: number,
+  total: number,
+  height: number
+): string {
+  if (!shouldShowTrendLabel(index, total)) {
+    return "";
+  }
+
+  const anchor = index === 0 ? "start" : index === total - 1 ? "end" : "middle";
+  return `<text x="${point.x.toFixed(1)}" y="${height - 14}" text-anchor="${anchor}">${escapeHtml(formatShortDate(point.entry.generatedAt))}</text>`;
+}
+
+function shouldShowTrendLabel(index: number, total: number): boolean {
+  if (total <= 6) {
+    return true;
+  }
+  return index === 0 || index === total - 1 || index % Math.ceil(total / 4) === 0;
+}
+
+function renderHistorySummary(reportPayload: unknown, fallback: ReportIndexEntry): string {
+  const report = isFlowReport(reportPayload) ? reportPayload : undefined;
+  const summary = report?.summary ?? fallback;
+  const steps = report?.steps ?? [];
+  const statusClass = historyStatusClass(summary.status);
+  const longestStepMs = Math.max(1, ...steps.map((step) => step.durationMs ?? 0));
+  const completedSteps = steps.filter((step) => step.durationMs !== undefined).length;
+
+  return `
+    <section class="history-overview">
+      <div class="history-title-block">
+        <span class="status-badge ${statusClass}">${escapeHtml(summary.status)}</span>
+        <h3>${escapeHtml(formatScenarioName(summary.scenario))}</h3>
+        <code>${escapeHtml(summary.runId)}</code>
+      </div>
+      <div class="history-stat-grid">
+        <div>
+          <span>总耗时</span>
+          <strong>${escapeHtml(formatDuration(summary.durationMs))}</strong>
+        </div>
+        <div>
+          <span>已计时步骤</span>
+          <strong>${completedSteps}/${steps.length || "--"}</strong>
+        </div>
+        <div>
+          <span>生成日期</span>
+          <strong>${escapeHtml(formatShortDate((report?.generatedAt ?? fallback.generatedAt)))}</strong>
+        </div>
+      </div>
+      ${summary.lastError ? `<p class="history-error">${escapeHtml(summary.lastError)}</p>` : ""}
+    </section>
+    <section class="duration-board">
+      <div class="duration-board-head">
+        <h3>步骤耗时</h3>
+        <span>${steps.length ? "最长条表示最慢步骤" : "这份报告没有步骤详情"}</span>
+      </div>
+      <div class="duration-list">
+        ${
+          steps.length
+            ? steps
+                .map((step) => renderStepDurationBar(step, longestStepMs))
+                .join("")
+            : `<div class="empty-log">没有步骤耗时数据。</div>`
+        }
+      </div>
+    </section>
+  `;
+}
+
+function renderStepDurationBar(step: FlowReport["steps"][number], longestStepMs: number): string {
+  const width = `${Math.max(4, Math.round(((step.durationMs ?? 0) / longestStepMs) * 100))}%`;
+  return `
+    <article class="duration-row ${step.status === "failed" ? "failed" : ""}">
+      <div class="duration-row-main">
+        <strong>${escapeHtml(step.label)}</strong>
+        <span>${escapeHtml(step.id)} · ${escapeHtml(step.status)}</span>
+      </div>
+      <div class="duration-track" aria-hidden="true">
+        <span style="width: ${width}"></span>
+      </div>
+      <time>${escapeHtml(formatDuration(step.durationMs))}</time>
+    </article>
+  `;
+}
+
+function isFlowReport(value: unknown): value is FlowReport {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "summary" in value &&
+    "steps" in value &&
+    Array.isArray((value as { steps?: unknown }).steps)
+  );
+}
+
+function historyStatusClass(status: string): string {
+  if (status === "success") {
+    return "ok";
+  }
+  if (status === "failed") {
+    return "bad";
+  }
+  return "";
+}
+
+function formatScenarioName(scenario: string): string {
+  return scenario
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function formatDuration(durationMs?: number): string {
+  if (durationMs === undefined) {
+    return "--";
+  }
+
+  if (durationMs < 1000) {
+    return `${durationMs}ms`;
+  }
+
+  const totalSeconds = Math.round(durationMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+}
+
+function formatShortDate(value?: string): string {
+  return value ? new Date(value).toLocaleDateString() : "--";
 }
 
 function resolveReportUrl(file: string): string {

@@ -101,6 +101,7 @@ body.is-resizing-grid * {
 
 h1,
 h2,
+h3,
 p {
   margin: 0;
 }
@@ -660,7 +661,8 @@ textarea:focus {
 }
 
 .log-entry pre,
-.raw-panel pre {
+.raw-panel pre,
+.history-json-panel pre {
   margin: 0;
   overflow: auto;
   border-top: 1px solid #e5e9e6;
@@ -734,46 +736,156 @@ textarea:focus {
 
 .history-panel {
   display: grid;
-  gap: 14px;
-  padding: 16px;
+  gap: 18px;
+  padding: 18px;
+  background:
+    linear-gradient(135deg, rgba(31, 109, 85, 0.08), transparent 34%),
+    rgba(255, 255, 255, 0.92);
+}
+
+.history-trend-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #dce1dd;
+  border-radius: 8px;
+  background: #fbfcfa;
+}
+
+.history-trend {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.trend-chart {
+  display: block;
+  width: 100%;
+  min-width: 640px;
+  height: auto;
+}
+
+.trend-grid line {
+  stroke: #e1e7e3;
+  stroke-width: 1;
+}
+
+.trend-grid text,
+.trend-labels text {
+  fill: #65736b;
+  font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.trend-line {
+  fill: none;
+  stroke: #1f6d55;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
+.trend-point circle {
+  fill: #ffffff;
+  stroke: #4f6d63;
+  stroke-width: 3;
+}
+
+.trend-point.ok circle {
+  stroke: #1f6d55;
+}
+
+.trend-point.bad circle {
+  stroke: #b33a2d;
+}
+
+.trend-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  color: #65736b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.trend-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #4f6d63;
+}
+
+.legend-dot.ok {
+  background: #1f6d55;
+}
+
+.legend-dot.bad {
+  background: #b33a2d;
 }
 
 .history-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 0.55fr) minmax(0, 1fr);
-  gap: 14px;
+  grid-template-columns: minmax(300px, 0.45fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
 }
 
 .history-list {
   display: grid;
   align-content: start;
-  gap: 8px;
+  gap: 10px;
 }
 
 .history-item {
   display: grid;
-  justify-items: start;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   border: 1px solid #dce1dd;
   border-radius: 8px;
-  background: #fbfcfa;
+  background: linear-gradient(180deg, #ffffff, #f7faf7);
   color: #171a1f;
   text-align: left;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
 }
 
 .history-item.active,
 .history-item:hover {
-  border-color: #94b6c4;
-  background: #eef7fa;
+  border-color: #79a7b7;
+  background: #f3fbfc;
+  box-shadow: 0 12px 24px rgba(31, 67, 84, 0.1);
+  transform: translateY(-1px);
+}
+
+.history-item-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .history-item strong {
   font-size: 15px;
 }
 
-.history-item span:not(.runtime-pill),
+.history-duration {
+  color: #1d4354;
+  font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 24px;
+  font-weight: 760;
+  line-height: 1;
+}
+
+.history-meta-line,
 .history-item code {
   overflow-wrap: anywhere;
   color: #65736b;
@@ -781,12 +893,192 @@ textarea:focus {
 }
 
 .history-json-panel {
+  display: grid;
+  gap: 14px;
   min-width: 0;
-  padding: 14px;
+  padding: 16px;
 }
 
 .history-json-panel pre {
-  max-height: 680px;
+  max-height: 320px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 4px 8px;
+  border: 1px solid #c8cec9;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #4f5c56;
+  font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 10px;
+  font-weight: 760;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.history-item-top .status-badge,
+.history-title-block .status-badge {
+  flex: none;
+}
+
+.history-title-block .status-badge {
+  justify-self: start;
+}
+
+.status-badge.ok {
+  border-color: #9fc9ac;
+  background: #eff8f1;
+  color: #1f6d55;
+}
+
+.status-badge.bad {
+  border-color: #efbdb6;
+  background: #fff0ee;
+  color: #9b342a;
+}
+
+.history-summary {
+  display: grid;
+  gap: 14px;
+}
+
+.history-overview,
+.duration-board {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid #dce1dd;
+  border-radius: 8px;
+  background: #fbfcfa;
+}
+
+.history-title-block {
+  display: grid;
+  gap: 7px;
+}
+
+.history-title-block h3 {
+  font-size: 22px;
+  font-weight: 760;
+}
+
+.history-title-block code {
+  overflow-wrap: anywhere;
+  color: #65736b;
+  font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 12px;
+}
+
+.history-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.history-stat-grid div {
+  display: grid;
+  gap: 4px;
+  min-height: 74px;
+  padding: 10px;
+  border: 1px solid #e1e5e2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.history-stat-grid span,
+.duration-board-head span,
+.duration-row-main span {
+  color: #65736b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.history-stat-grid strong {
+  align-self: end;
+  color: #1d4354;
+  font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 18px;
+}
+
+.history-error {
+  padding: 10px 12px;
+  border: 1px solid #efbdb6;
+  border-radius: 8px;
+  background: #fff0ee;
+  color: #8e3026;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.duration-board-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.duration-board-head h3 {
+  font-size: 16px;
+}
+
+.duration-list {
+  display: grid;
+  gap: 8px;
+}
+
+.duration-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.9fr) minmax(180px, 1fr) 76px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid #e5e9e6;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.duration-row.failed {
+  border-color: #efbdb6;
+}
+
+.duration-row-main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.duration-row-main strong,
+.duration-row-main span {
+  overflow-wrap: anywhere;
+}
+
+.duration-track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e6ebe8;
+}
+
+.duration-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2b6f8f, #1f6d55);
+}
+
+.duration-row.failed .duration-track span {
+  background: linear-gradient(90deg, #b33a2d, #d67545);
+}
+
+.duration-row time {
+  color: #1d4354;
+  font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 13px;
+  font-weight: 760;
+  text-align: right;
 }
 
 @media (max-width: 1180px) {
@@ -837,8 +1129,14 @@ textarea:focus {
   }
 
   .button-row,
-  .metrics-panel {
+  .metrics-panel,
+  .history-stat-grid,
+  .duration-row {
     grid-template-columns: 1fr;
+  }
+
+  .duration-row time {
+    text-align: left;
   }
 
   .step {
