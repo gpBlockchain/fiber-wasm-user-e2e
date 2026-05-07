@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-05-06T09:12:33.900Z",
+  "source": "ci",
+  "summary": {
+    "runId": "mock-local-success-001",
+    "scenario": "local-multi-node",
+    "status": "success",
+    "startedAt": "2026-05-06T09:00:00.000Z",
+    "endedAt": "2026-05-06T09:12:33.870Z",
+    "durationMs": 753870
+  },
+  "steps": [
+    {
+      "id": "local-start",
+      "label": "Start local WASM nodes",
+      "status": "success",
+      "durationMs": 3840,
+      "durationSeconds": 3.84
+    },
+    {
+      "id": "local-node-info",
+      "label": "Read local node_info",
+      "status": "success",
+      "durationMs": 62,
+      "durationSeconds": 0.062
+    },
+    {
+      "id": "local-connect-peers",
+      "label": "Connect local peers",
+      "status": "success",
+      "durationMs": 86420,
+      "durationSeconds": 86.42
+    },
+    {
+      "id": "local-open-channels",
+      "label": "Open local channels",
+      "status": "success",
+      "durationMs": 120,
+      "durationSeconds": 0.12
+    },
+    {
+      "id": "local-channel-ready",
+      "label": "Wait local ChannelReady",
+      "status": "success",
+      "durationMs": 124500,
+      "durationSeconds": 124.5
+    },
+    {
+      "id": "local-graph-sync",
+      "label": "Wait local GraphSync",
+      "status": "success",
+      "durationMs": 188300,
+      "durationSeconds": 188.3
+    },
+    {
+      "id": "local-send-payments",
+      "label": "Send local payments",
+      "status": "success",
+      "durationMs": 9420,
+      "durationSeconds": 9.42
+    },
+    {
+      "id": "local-stop",
+      "label": "Stop Fiber",
+      "status": "success",
+      "durationMs": 720,
+      "durationSeconds": 0.72
+    },
+    {
+      "id": "local-restart",
+      "label": "Restart Fiber",
+      "status": "success",
+      "durationMs": 3980,
+      "durationSeconds": 3.98
+    },
+    {
+      "id": "local-restart-recovery",
+      "label": "Recover peers/channels",
+      "status": "success",
+      "durationMs": 268100,
+      "durationSeconds": 268.1
+    },
+    {
+      "id": "local-restart-payment",
+      "label": "Send payment after restart",
+      "status": "success",
+      "durationMs": 11140,
+      "durationSeconds": 11.14
+    },
+    {
+      "id": "local-shutdown",
+      "label": "Shutdown local nodes",
+      "status": "success",
+      "durationMs": 570
+    }
+  ]
+}
