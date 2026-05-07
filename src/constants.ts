@@ -20,7 +20,7 @@ fiber:
             args: 0x3cb7c0304fe53f75bb5727e2484d0beae4bd99d979813c6fc97c3cca569f10f6
         - cell_dep:
             out_point:
-              tx_hash: 0x5a5288769cecde6451cb5d301416c297a6da43dc3ac2f3253542b4082478b19b
+              tx_hash: 0x12c569a258dd9c5bd99f632bb8314b1263b90921ba31496467580d6b79dd14a7
               index: 0x0
             dep_type: code
     - name: CommitmentLock
@@ -35,7 +35,7 @@ fiber:
             args: 0xf7e458887495cf70dd30d1543cad47dc1dfe9d874177bf19291e4db478d5751b
         - cell_dep:
             out_point:
-              tx_hash: 0x5a5288769cecde6451cb5d301416c297a6da43dc3ac2f3253542b4082478b19b
+              tx_hash: 0x12c569a258dd9c5bd99f632bb8314b1263b90921ba31496467580d6b79dd14a7
               index: 0x0
             dep_type: code
 
