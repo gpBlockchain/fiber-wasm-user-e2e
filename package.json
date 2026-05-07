@@ -7,7 +7,8 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "ci:scenario": "node scripts/run-scenario-ci.mjs"
   },
   "dependencies": {
     "@ckb-ccc/core": "^1.12.5",
@@ -15,6 +16,7 @@
     "lucide": "^0.468.0"
   },
   "devDependencies": {
+    "playwright": "^1.59.1",
     "typescript": "^5.7.2",
     "vite": "^6.0.0"
   }

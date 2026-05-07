@@ -1,0 +1,54 @@
+name: Daily Fiber WASM scenario
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  run-scenario:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser scenario and write report
+        run: npm run ci:scenario
+        env:
+          CI_SCENARIO: testnet-single
+          CI_FIBER_SECRET_KEY: ${{ secrets.CI_FIBER_SECRET_KEY }}
+          CI_CKB_SECRET_KEY: ${{ secrets.CI_CKB_SECRET_KEY }}
+          CI_PEER_PUBKEY: ${{ secrets.CI_PEER_PUBKEY }}
+          CI_PAYMENT_TARGET_PUBKEY: ${{ secrets.CI_PAYMENT_TARGET_PUBKEY }}
+          CI_FUNDING_AMOUNT: ${{ vars.CI_FUNDING_AMOUNT }}
+          CI_PAYMENT_AMOUNT: ${{ vars.CI_PAYMENT_AMOUNT }}
+
+      - name: Commit report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/reports
+          if git diff --cached --quiet; then
+            echo "No report changes to commit."
+            exit 0
+          fi
+          git commit -m "Add daily Fiber WASM scenario report"
+          git push
+

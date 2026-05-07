@@ -10,6 +10,15 @@ import {
 import { SCENARIO_LESSONS, STEP_LESSONS, type StepLesson } from "./education";
 import { randomSecretKeyHex } from "./fiberClient";
 import { FlowRunner, createRawExportSnapshot } from "./flowRunner";
+import {
+  createFlowReport,
+  createReportIndexEntry,
+  readLocalReportHistory,
+  saveLocalFlowReport,
+  type FlowReport,
+  type ReportIndex,
+  type ReportIndexEntry
+} from "./reporting";
 import type { FlowConfig, FlowRunState, FlowScenario, FlowStep, LocalNodeConfig, StepId } from "./types";
 import "./styles.css";
 
@@ -24,10 +33,14 @@ let runner: FlowRunner | undefined;
 let activeScenario: FlowScenario = "testnet-single";
 let ckbAddressRenderToken = 0;
 let localAddressRenderToken = 0;
+let latestReport: FlowReport | undefined;
 const CONFIG_COLLAPSED_STORAGE_KEY = "fiber-wasm-config-collapsed";
 const MAIN_GRID_LAYOUT_STORAGE_KEY = "fiber-wasm-main-grid-layout";
+const savedReportRunIds = new Set<string>();
 
 const ckbClient = new ccc.ClientPublicTestnet();
+const urlParams = new URLSearchParams(window.location.search);
+const isHistoryView = urlParams.get("view") === "history";
 
 app.innerHTML = `
   <main class="app-shell">
@@ -36,9 +49,15 @@ app.innerHTML = `
         <p class="eyebrow">Fiber WASM Testnet</p>
         <h1>用户体验流程演示</h1>
       </div>
-      <div class="runtime-strip">
-        <span class="runtime-pill" id="isolation-status"></span>
-        <span class="runtime-pill" id="run-status">Idle</span>
+      <div class="topbar-actions">
+        <nav class="view-nav" aria-label="Views">
+          <a href="./" class="${isHistoryView ? "" : "active"}">Run</a>
+          <a href="?view=history" class="${isHistoryView ? "active" : ""}">History</a>
+        </nav>
+        <div class="runtime-strip">
+          <span class="runtime-pill" id="isolation-status"></span>
+          <span class="runtime-pill" id="run-status">Idle</span>
+        </div>
       </div>
     </header>
 
@@ -208,12 +227,46 @@ app.innerHTML = `
         <section class="raw-panel">
           <div class="panel-head">
             <h2>Raw JSON</h2>
-            <button class="icon-button" id="copy-json" type="button" title="Copy JSON">
-              <i data-lucide="copy"></i>
-            </button>
+            <div class="panel-actions">
+              <span class="report-status" id="report-status">Report pending</span>
+              <button class="icon-button" id="download-report" type="button" title="Download report JSON" disabled>
+                <i data-lucide="file-json"></i>
+              </button>
+              <button class="icon-button" id="copy-json" type="button" title="Copy JSON">
+                <i data-lucide="copy"></i>
+              </button>
+            </div>
           </div>
           <pre id="raw-json">{}</pre>
+          <script type="application/json" id="latest-report-json">{}</script>
         </section>
+      </section>
+    </section>
+
+    <section class="history-view" id="history-view" hidden>
+      <section class="history-panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Reports</p>
+            <h2>历史 JSON 数据</h2>
+          </div>
+          <button class="secondary-button compact-button" id="refresh-history" type="button">
+            <i data-lucide="refresh-cw"></i>
+            Refresh
+          </button>
+        </div>
+        <div class="history-grid">
+          <div class="history-list" id="history-list"></div>
+          <div class="history-json-panel">
+            <div class="panel-head">
+              <h2>Report JSON</h2>
+              <button class="icon-button" id="copy-history-json" type="button" title="Copy selected report JSON">
+                <i data-lucide="copy"></i>
+              </button>
+            </div>
+            <pre id="history-json">{}</pre>
+          </div>
+        </div>
       </section>
     </section>
   </main>
@@ -221,6 +274,7 @@ app.innerHTML = `
 
 const elements = {
   workspace: byId("workspace"),
+  historyView: byId("history-view"),
   mainGrid: byId("main-grid"),
   learningPanel: byId("learning-panel"),
   runLogPanel: byId("run-log-panel"),
@@ -248,6 +302,8 @@ const elements = {
   stopFlow: byId<HTMLButtonElement>("stop-flow"),
   resetView: byId<HTMLButtonElement>("reset-view"),
   copyJson: byId<HTMLButtonElement>("copy-json"),
+  downloadReport: byId<HTMLButtonElement>("download-report"),
+  reportStatus: byId("report-status"),
   nodePubkey: byId("node-pubkey"),
   lastError: byId("last-error"),
   scenarioLesson: byId("scenario-lesson"),
@@ -257,7 +313,12 @@ const elements = {
   rpcLogCap: byId("rpc-log-cap"),
   rpcLogs: byId("rpc-logs"),
   metrics: byId("metrics"),
-  rawJson: byId("raw-json")
+  rawJson: byId("raw-json"),
+  latestReportJson: byId<HTMLScriptElement>("latest-report-json"),
+  refreshHistory: byId<HTMLButtonElement>("refresh-history"),
+  historyList: byId("history-list"),
+  historyJson: byId("history-json"),
+  copyHistoryJson: byId<HTMLButtonElement>("copy-history-json")
 };
 const scenarioFields = document.querySelectorAll<HTMLElement>("[data-scenario-field]");
 type ScenarioDraft = {
@@ -277,6 +338,11 @@ const scenarioDrafts: Record<FlowScenario, ScenarioDraft> = {
   "testnet-single": createScenarioDraft("testnet-single"),
   "local-multi-node": createScenarioDraft("local-multi-node")
 };
+type HistoryDisplayItem = {
+  key: string;
+  entry: ReportIndexEntry;
+  report?: FlowReport;
+};
 
 hydrateDefaults();
 renderRuntime();
@@ -287,6 +353,13 @@ createIcons({ icons });
 applyConfigCollapsed(localStorage.getItem(CONFIG_COLLAPSED_STORAGE_KEY) === "true");
 restoreMainGridLayout();
 setupMainGridResizers();
+
+if (isHistoryView) {
+  elements.workspace.hidden = true;
+  elements.historyView.hidden = false;
+  elements.runStatus.textContent = "History";
+  void renderHistoryView();
+}
 
 elements.toggleConfig.addEventListener("click", () => {
   const shouldCollapse = !elements.workspace.classList.contains("config-collapsed");
@@ -368,6 +441,21 @@ elements.resetView.addEventListener("click", () => {
 elements.copyJson.addEventListener("click", async () => {
   const text = JSON.stringify(latestState ? createRawExportSnapshot(latestState) : {}, null, 2);
   await navigator.clipboard.writeText(text);
+});
+
+elements.downloadReport.addEventListener("click", () => {
+  if (!latestReport) {
+    return;
+  }
+  downloadJson(`fiber-report-${latestReport.summary.runId}.json`, latestReport);
+});
+
+elements.refreshHistory.addEventListener("click", () => {
+  void renderHistoryView();
+});
+
+elements.copyHistoryJson.addEventListener("click", async () => {
+  await navigator.clipboard.writeText(elements.historyJson.textContent ?? "{}");
 });
 
 function hydrateDefaults(): void {
@@ -840,6 +928,10 @@ function renderEmptyState(): void {
   const scenario = elements.scenario.value as FlowConfig["scenario"];
   const stepDefinitions = getFlowStepDefinitions(scenario);
 
+  latestReport = undefined;
+  elements.downloadReport.disabled = true;
+  elements.reportStatus.textContent = "Report pending";
+  elements.latestReportJson.textContent = "{}";
   elements.runStatus.textContent = "Idle";
   elements.nodePubkey.textContent = "--";
   elements.lastError.textContent = "--";
@@ -893,7 +985,136 @@ function renderState(state: FlowRunState): void {
   elements.rpcLogs.scrollTop = elements.rpcLogs.scrollHeight;
   elements.metrics.innerHTML = metricCards(state, state.scenario);
   elements.rawJson.textContent = JSON.stringify(createRawExportSnapshot(state), null, 2);
+  renderReportState(state);
   createIcons({ icons });
+}
+
+function renderReportState(state: FlowRunState): void {
+  if (state.running) {
+    latestReport = undefined;
+    elements.downloadReport.disabled = true;
+    elements.reportStatus.textContent = "Report running";
+    elements.latestReportJson.textContent = "{}";
+    return;
+  }
+
+  if (!state.endedAt) {
+    return;
+  }
+
+  latestReport = createFlowReport(state, "browser");
+  elements.downloadReport.disabled = false;
+  elements.reportStatus.textContent =
+    latestReport.summary.status === "success" ? "Report generated" : "Failure report generated";
+  elements.latestReportJson.textContent = JSON.stringify(latestReport, null, 2);
+
+  if (!savedReportRunIds.has(state.runId)) {
+    saveLocalFlowReport(latestReport);
+    savedReportRunIds.add(state.runId);
+  }
+}
+
+async function renderHistoryView(): Promise<void> {
+  elements.historyList.innerHTML = `<div class="empty-log">Loading reports...</div>`;
+  elements.historyJson.textContent = "{}";
+
+  const localReports = readLocalReportHistory();
+  const localItems: HistoryDisplayItem[] = localReports.map((report) => ({
+    key: `local-${report.summary.runId}`,
+    entry: createReportIndexEntry(report),
+    report
+  }));
+  const ciIndex = await loadCiReportIndex();
+  const ciItems: HistoryDisplayItem[] = ciIndex.reports.map((entry) => ({
+    key: `ci-${entry.file ?? entry.runId}`,
+    entry
+  }));
+  const items = [...localItems, ...ciItems].sort(
+    (left, right) =>
+      new Date(right.entry.generatedAt).getTime() - new Date(left.entry.generatedAt).getTime()
+  );
+
+  if (!items.length) {
+    elements.historyList.innerHTML = `<div class="empty-log">No history yet.</div>`;
+    return;
+  }
+
+  elements.historyList.innerHTML = items.map(renderHistoryItem).join("");
+  elements.historyList.querySelectorAll<HTMLButtonElement>("[data-history-key]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const item = items.find((candidate) => candidate.key === button.dataset.historyKey);
+      if (item) {
+        void showHistoryReport(item);
+      }
+    });
+  });
+
+  await showHistoryReport(items[0]);
+  createIcons({ icons });
+}
+
+async function loadCiReportIndex(): Promise<ReportIndex> {
+  try {
+    const response = await fetch(resolveReportUrl("reports/index.json"), { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Report index returned ${response.status}`);
+    }
+    const index = (await response.json()) as ReportIndex;
+    return Array.isArray(index.reports)
+      ? index
+      : { schemaVersion: 1, updatedAt: new Date(0).toISOString(), reports: [] };
+  } catch {
+    return { schemaVersion: 1, updatedAt: new Date(0).toISOString(), reports: [] };
+  }
+}
+
+async function showHistoryReport(item: HistoryDisplayItem): Promise<void> {
+  const activeReport =
+    item.report ??
+    (item.entry.file ? await fetchReportFile(item.entry.file) : { summary: item.entry });
+
+  elements.historyList.querySelectorAll("[data-history-key]").forEach((button) => {
+    button.classList.toggle(
+      "active",
+      button instanceof HTMLElement && button.dataset.historyKey === item.key
+    );
+  });
+  elements.historyJson.textContent = JSON.stringify(activeReport, null, 2);
+}
+
+async function fetchReportFile(file: string): Promise<unknown> {
+  const response = await fetch(resolveReportUrl(file), { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`Report file returned ${response.status}`);
+  }
+  return response.json();
+}
+
+function renderHistoryItem(item: HistoryDisplayItem): string {
+  const entry = item.entry;
+  const statusClass = entry.status === "success" ? "ok" : entry.status === "failed" ? "bad" : "";
+  return `
+    <button class="history-item" data-history-key="${escapeHtml(item.key)}" type="button">
+      <span class="runtime-pill ${statusClass}">${escapeHtml(entry.status)}</span>
+      <strong>${escapeHtml(entry.scenario)}</strong>
+      <span>${escapeHtml(new Date(entry.generatedAt).toLocaleString())}</span>
+      <code>${escapeHtml(entry.source)} · ${escapeHtml(entry.runId)}</code>
+    </button>
+  `;
+}
+
+function resolveReportUrl(file: string): string {
+  return new URL(file.replace(/^\//, ""), new URL(".", window.location.href)).toString();
+}
+
+function downloadJson(fileName: string, value: unknown): void {
+  const blob = new Blob([JSON.stringify(value, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 function renderRpcLog(log: FlowRunState["rpcLogs"][number]): string {

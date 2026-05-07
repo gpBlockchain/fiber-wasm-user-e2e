@@ -90,6 +90,41 @@ npm run typecheck
 npm run build
 ```
 
+## Reports and History
+
+When a flow reaches `Finished` or `Failed`, the page generates a structured
+report JSON. The report includes a summary, the bounded raw run snapshot, step
+results, metrics, flow logs, capped RPC logs, and browser environment data.
+
+- Use the JSON button in the `Raw JSON` panel to download the latest report.
+- Open `?view=history` or the `History` tab to inspect previous reports.
+- Browser-generated reports are kept in local storage.
+- CI-generated reports are read from `public/reports/index.json` and the JSON
+  files referenced there.
+
+## Daily CI Scenario
+
+`.github/workflows/daily-scenario.yml` runs once per day and can also be started
+manually with `workflow_dispatch`. It starts Vite with COOP/COEP headers, opens
+Chromium with Playwright, runs the `Testnet single node` scenario, writes a
+report under `public/reports/`, updates `public/reports/index.json`, and commits
+the result.
+
+Configure these GitHub secrets before expecting a successful funded run:
+
+- `CI_FIBER_SECRET_KEY`
+- `CI_CKB_SECRET_KEY`
+- `CI_PEER_PUBKEY`
+- `CI_PAYMENT_TARGET_PUBKEY`
+
+Optional GitHub variables:
+
+- `CI_FUNDING_AMOUNT`
+- `CI_PAYMENT_AMOUNT`
+
+If the funded key or peer is unavailable, the workflow still records the failed
+run as a report so the history page shows what broke.
+
 ## Inputs
 
 - The step panel is written as a teaching path: each scenario has a learning
@@ -205,6 +240,11 @@ Example `Local nodes JSON`:
 - `src/education.ts`
   Scenario learning goals and per-step teaching notes, including the RPC calls
   or `fiber-js` APIs that implement each step.
+- `src/reporting.ts`
+  Builds browser and CI report summaries and stores browser-side history.
+- `scripts/run-scenario-ci.mjs`
+  Starts Vite, drives the browser scenario with Playwright, and writes CI report
+  JSON files.
 
 ## Development Notes
 
