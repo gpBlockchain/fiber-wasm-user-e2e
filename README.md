@@ -29,7 +29,7 @@ Each step records status, timestamps, duration, result payload, and error
 details. The raw JSON export at the bottom of the page can be copied into a
 report or issue.
 
-`Local multi-node` is a separate scenario with its own shorter flow:
+`Local multi-node` is a separate scenario with its own multi-node flow:
 
 1. Start N browser-side WASM Fiber nodes.
 2. Run `node_info` for every local node.
@@ -40,7 +40,11 @@ report or issue.
 6. Poll `graph_channels` until each local node sees the other local nodes'
    newly created channels.
 7. Attempt keysend payments between every ordered local node pair.
-8. Run `shutdown_channel` for ready channels on every local node.
+8. Stop every browser-side local node without deleting IndexedDB.
+9. Restart every local node with the same key and database prefix.
+10. Confirm peer and channel visibility after restart.
+11. Attempt keysend payments between every ordered local node pair again.
+12. Run `shutdown_channel` for ready channels on every local node.
 
 Local nodes use different IndexedDB prefixes and node-specific Fiber and CKB
 keys. Each configured CKB key must already have testnet CKB balance; random keys
@@ -198,3 +202,64 @@ Example `Local nodes JSON`:
   DOM UI, form handling, logs, metrics, and raw JSON export.
 - `src/constants.ts`
   Default testnet config and flow step labels.
+- `src/education.ts`
+  Scenario learning goals and per-step teaching notes, including the RPC calls
+  or `fiber-js` APIs that implement each step.
+
+## Development Notes
+
+Keep the demo useful as both a runnable tool and a teaching artifact. A flow
+change is not complete until the UI, runner, metrics, RPC log, and teaching
+copy all tell the same story.
+
+### Add a New Scenario
+
+1. Add the scenario id to `FlowScenario` in `src/types.ts`.
+2. Add a scenario-specific step definition array in `src/constants.ts`, then
+   update `FLOW_STEP_DEFINITIONS` and `getFlowStepDefinitions`.
+3. Add `SCENARIO_LESSONS[scenario]` and a `STEP_LESSONS` entry for every new
+   step id in `src/education.ts`. Every step must explain the concept, the
+   RPC call or `fiber-js` API, why it matters, and what users should watch.
+4. Implement the scenario branch in `FlowRunner.run` and add a dedicated runner
+   method in `src/flowRunner.ts`. Use `runStep(stepId, task)` for every user
+   visible step so duration, result, error, and teaching state stay in sync.
+5. Add or update metrics in `FlowMetrics` and render them in `metricCards` in
+   `src/main.ts`.
+6. Add scenario-specific form fields and defaults in `src/main.ts` if needed.
+   Use `data-scenario-field="<scenario-id>"` so hidden fields do not mislead
+   users. If the scenario needs separate persisted draft values, extend
+   `ScenarioDraft`.
+7. Update README `What It Does`, `Inputs`, and `Common Failures` for the new
+   operator behavior.
+8. Run `npm run build` before committing.
+
+### Add a New Step to an Existing Scenario
+
+1. Add the step id and label to the relevant step definition array in
+   `src/constants.ts`.
+2. Add the required `STEP_LESSONS[stepId]` entry in `src/education.ts`.
+3. Add the implementation in `src/flowRunner.ts` with `runStep`. If the step
+   verifies an async condition, prefer polling the same RPC that users can see
+   in the live RPC log.
+4. If the step produces a meaningful duration or count, add a metric and show it
+   in `metricCards`.
+5. Make sure the RPC log shows the core method users should learn from. For
+   non-RPC lifecycle work, state the `fiber-js` API explicitly in the lesson.
+6. Run `npm run build`.
+
+### IndexedDB and Restart Rules
+
+- Restart scenarios must reuse the same Fiber secret key, CKB secret key, and
+  `databasePrefix`; otherwise they are testing a fresh node, not recovery.
+- Use unique prefixes for parallel local nodes. Reusing a prefix across local
+  nodes can mix channel state and make recovery results misleading.
+- The delete buttons intentionally delete databases by prefix. Keep this visible
+  and explicit whenever adding new persistence-related UI.
+
+### Teaching Copy Rules
+
+- Do not add a visible step without a matching `STEP_LESSONS` entry.
+- The `RPC call` text should name the exact RPC method and the important params
+  or polling condition.
+- The `What to watch` text should tell users which log, metric, state name, or
+  returned field proves the step succeeded.
