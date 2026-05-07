@@ -116,9 +116,14 @@ h2 {
 
 .workspace {
   display: grid;
-  grid-template-columns: 380px minmax(0, 1fr);
+  grid-template-columns: minmax(340px, 380px) minmax(0, 1fr);
   gap: 16px;
   align-items: start;
+  transition: grid-template-columns 160ms ease;
+}
+
+.workspace.config-collapsed {
+  grid-template-columns: 56px minmax(0, 1fr);
 }
 
 .config-panel,
@@ -138,6 +143,8 @@ h2 {
   display: grid;
   gap: 13px;
   padding: 16px;
+  overflow: hidden;
+  transition: padding 160ms ease;
 }
 
 .flow-panel {
@@ -151,6 +158,33 @@ h2 {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+}
+
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.config-body {
+  display: grid;
+  gap: 13px;
+  min-width: 0;
+}
+
+.workspace.config-collapsed .config-panel {
+  justify-items: center;
+  padding: 10px 8px;
+}
+
+.workspace.config-collapsed .config-panel h2,
+.workspace.config-collapsed .config-body,
+.workspace.config-collapsed #generate-keys {
+  display: none;
+}
+
+.workspace.config-collapsed .panel-head {
+  justify-content: center;
 }
 
 .log-cap {
@@ -598,6 +632,10 @@ textarea:focus {
   .main-grid,
   .summary-band {
     grid-template-columns: 1fr;
+  }
+
+  .workspace.config-collapsed {
+    grid-template-columns: 56px minmax(0, 1fr);
   }
 
   .config-panel {

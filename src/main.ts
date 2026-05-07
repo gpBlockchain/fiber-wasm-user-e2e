@@ -24,6 +24,7 @@ let runner: FlowRunner | undefined;
 let activeScenario: FlowScenario = "testnet-single";
 let ckbAddressRenderToken = 0;
 let localAddressRenderToken = 0;
+const CONFIG_COLLAPSED_STORAGE_KEY = "fiber-wasm-config-collapsed";
 
 const ckbClient = new ccc.ClientPublicTestnet();
 
@@ -40,103 +41,110 @@ app.innerHTML = `
       </div>
     </header>
 
-    <section class="workspace">
-      <aside class="config-panel">
+    <section class="workspace" id="workspace">
+      <aside class="config-panel" aria-label="Configuration">
         <div class="panel-head">
           <h2>配置</h2>
-          <button class="icon-button" id="generate-keys" type="button" title="Generate keys">
-            <i data-lucide="key-round"></i>
-          </button>
-        </div>
-
-        <label>
-          Scenario
-          <select id="scenario">
-            <option value="testnet-single">Testnet single node</option>
-            <option value="local-multi-node">Local multi-node</option>
-          </select>
-        </label>
-
-        <label data-scenario-field="testnet-single">
-          Fiber secret key
-          <input id="fiber-secret-key" autocomplete="off" spellcheck="false" />
-        </label>
-
-        <label data-scenario-field="testnet-single">
-          CKB secret key
-          <input id="ckb-secret-key" autocomplete="off" spellcheck="false" />
-        </label>
-
-        <div class="assist-panel" data-scenario-field="testnet-single">
-          <span>CKB address</span>
-          <code id="ckb-address">--</code>
-        </div>
-
-        <div class="field-group" data-scenario-field="testnet-single">
-          <label>
-            Database prefix
-            <input id="database-prefix" autocomplete="off" />
-          </label>
-          <button class="danger-button" id="delete-indexeddb" type="button">
-            <i data-lucide="trash-2"></i>
-            Delete IndexedDB
-          </button>
-        </div>
-
-        <label data-scenario-field="testnet-single">
-          Peer pubkey
-          <input id="peer-pubkey" autocomplete="off" placeholder="02..." />
-        </label>
-
-        <label data-scenario-field="testnet-single">
-          Funding amount (shannon)
-          <input id="funding-amount" inputmode="numeric" />
-        </label>
-
-        <label data-scenario-field="testnet-single">
-          Payment target pubkey
-          <input id="payment-target-pubkey" autocomplete="off" placeholder="Defaults to peer pubkey" />
-        </label>
-
-        <label data-scenario-field="testnet-single">
-          Payment amount (shannon)
-          <input id="payment-amount" inputmode="numeric" />
-        </label>
-
-        <label data-scenario-field="local-multi-node">
-          Local node count
-          <input id="local-node-count" inputmode="numeric" />
-        </label>
-
-        <div class="field-group" data-scenario-field="local-multi-node">
-          <label>
-            Local nodes JSON
-            <textarea id="local-nodes-json" spellcheck="false"></textarea>
-          </label>
-          <div class="assist-panel">
-            <span>Local CKB addresses</span>
-            <code id="local-ckb-addresses">--</code>
+          <div class="panel-actions">
+            <button class="icon-button" id="toggle-config" type="button" title="Collapse config" aria-expanded="true">
+              <i data-lucide="panel-left-close"></i>
+            </button>
+            <button class="icon-button" id="generate-keys" type="button" title="Generate keys">
+              <i data-lucide="key-round"></i>
+            </button>
           </div>
-          <button class="danger-button" id="delete-local-indexeddb" type="button">
-            <i data-lucide="trash-2"></i>
-            Delete local IndexedDB
-          </button>
         </div>
 
-        <label>
-          Fiber config
-          <textarea id="fiber-config" spellcheck="false"></textarea>
-        </label>
+        <div class="config-body">
+          <label>
+            Scenario
+            <select id="scenario">
+              <option value="testnet-single">Testnet single node</option>
+              <option value="local-multi-node">Local multi-node</option>
+            </select>
+          </label>
 
-        <div class="button-row">
-          <button class="primary-button" id="run-flow" type="button">
-            <i data-lucide="play"></i>
-            Run flow
-          </button>
-          <button class="secondary-button" id="stop-flow" type="button">
-            <i data-lucide="square"></i>
-            Stop
-          </button>
+          <label data-scenario-field="testnet-single">
+            Fiber secret key
+            <input id="fiber-secret-key" autocomplete="off" spellcheck="false" />
+          </label>
+
+          <label data-scenario-field="testnet-single">
+            CKB secret key
+            <input id="ckb-secret-key" autocomplete="off" spellcheck="false" />
+          </label>
+
+          <div class="assist-panel" data-scenario-field="testnet-single">
+            <span>CKB address</span>
+            <code id="ckb-address">--</code>
+          </div>
+
+          <div class="field-group" data-scenario-field="testnet-single">
+            <label>
+              Database prefix
+              <input id="database-prefix" autocomplete="off" />
+            </label>
+            <button class="danger-button" id="delete-indexeddb" type="button">
+              <i data-lucide="trash-2"></i>
+              Delete IndexedDB
+            </button>
+          </div>
+
+          <label data-scenario-field="testnet-single">
+            Peer pubkey
+            <input id="peer-pubkey" autocomplete="off" placeholder="02..." />
+          </label>
+
+          <label data-scenario-field="testnet-single">
+            Funding amount (shannon)
+            <input id="funding-amount" inputmode="numeric" />
+          </label>
+
+          <label data-scenario-field="testnet-single">
+            Payment target pubkey
+            <input id="payment-target-pubkey" autocomplete="off" placeholder="Defaults to peer pubkey" />
+          </label>
+
+          <label data-scenario-field="testnet-single">
+            Payment amount (shannon)
+            <input id="payment-amount" inputmode="numeric" />
+          </label>
+
+          <label data-scenario-field="local-multi-node">
+            Local node count
+            <input id="local-node-count" inputmode="numeric" />
+          </label>
+
+          <div class="field-group" data-scenario-field="local-multi-node">
+            <label>
+              Local nodes JSON
+              <textarea id="local-nodes-json" spellcheck="false"></textarea>
+            </label>
+            <div class="assist-panel">
+              <span>Local CKB addresses</span>
+              <code id="local-ckb-addresses">--</code>
+            </div>
+            <button class="danger-button" id="delete-local-indexeddb" type="button">
+              <i data-lucide="trash-2"></i>
+              Delete local IndexedDB
+            </button>
+          </div>
+
+          <label>
+            Fiber config
+            <textarea id="fiber-config" spellcheck="false"></textarea>
+          </label>
+
+          <div class="button-row">
+            <button class="primary-button" id="run-flow" type="button">
+              <i data-lucide="play"></i>
+              Run flow
+            </button>
+            <button class="secondary-button" id="stop-flow" type="button">
+              <i data-lucide="square"></i>
+              Stop
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -195,8 +203,10 @@ app.innerHTML = `
 `;
 
 const elements = {
+  workspace: byId("workspace"),
   isolationStatus: byId("isolation-status"),
   runStatus: byId("run-status"),
+  toggleConfig: byId<HTMLButtonElement>("toggle-config"),
   generateKeys: byId<HTMLButtonElement>("generate-keys"),
   fiberSecretKey: byId<HTMLInputElement>("fiber-secret-key"),
   ckbSecretKey: byId<HTMLInputElement>("ckb-secret-key"),
@@ -253,6 +263,13 @@ updateScenarioFields();
 refreshCkbAddressPreviews();
 renderEmptyState();
 createIcons({ icons });
+applyConfigCollapsed(localStorage.getItem(CONFIG_COLLAPSED_STORAGE_KEY) === "true");
+
+elements.toggleConfig.addEventListener("click", () => {
+  const shouldCollapse = !elements.workspace.classList.contains("config-collapsed");
+  localStorage.setItem(CONFIG_COLLAPSED_STORAGE_KEY, String(shouldCollapse));
+  applyConfigCollapsed(shouldCollapse);
+});
 
 elements.generateKeys.addEventListener("click", () => {
   if (activeScenario === "local-multi-node") {
@@ -696,6 +713,15 @@ function renderRuntime(): void {
   const isolated = window.crossOriginIsolated && typeof SharedArrayBuffer !== "undefined";
   elements.isolationStatus.className = `runtime-pill ${isolated ? "ok" : "bad"}`;
   elements.isolationStatus.textContent = isolated ? "SharedArrayBuffer ready" : "Header check failed";
+}
+
+function applyConfigCollapsed(isCollapsed: boolean): void {
+  elements.workspace.classList.toggle("config-collapsed", isCollapsed);
+  elements.toggleConfig.title = isCollapsed ? "Expand config" : "Collapse config";
+  elements.toggleConfig.setAttribute("aria-label", isCollapsed ? "Expand config" : "Collapse config");
+  elements.toggleConfig.setAttribute("aria-expanded", String(!isCollapsed));
+  elements.toggleConfig.innerHTML = `<i data-lucide="${isCollapsed ? "panel-left-open" : "panel-left-close"}"></i>`;
+  createIcons({ icons });
 }
 
 function updateScenarioFields(): void {
