@@ -10,6 +10,7 @@
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
+    "@ckb-ccc/core": "^1.12.5",
     "@nervosnetwork/fiber-js": "0.8.1",
     "lucide": "^0.468.0"
   },

@@ -92,10 +92,13 @@ npm run build
   Used by the WASM Fiber node identity.
 - `CKB secret key`
   Used for CKB signing and channel funding. The page generates a random key by
-  default, but a random key will not have testnet funds.
+  default, but a random key will not have testnet funds. The page derives the
+  corresponding testnet CKB address with `@ckb-ccc/core` so you can verify the
+  balance before running the flow.
 - `Database prefix`
   IndexedDB namespace for this browser-side Fiber node. Reuse it to test restart
-  persistence; change it to start from fresh local state.
+  persistence; change it to start from fresh local state. Use `Delete
+  IndexedDB` to remove databases matching the current prefix.
 - `Peer pubkey`
   Remote Fiber node pubkey used for `connect_peer`, `open_channel`, and restart
   recovery checks.
@@ -117,7 +120,8 @@ npm run build
   exactly `Local node count` entries. Every entry needs a unique
   `fiberSecretKeyHex`, a unique funded `ckbSecretKeyHex`, a unique
   `externalPeerPubkey`, and may optionally set `fundingAmount` and
-  `databasePrefix`.
+  `databasePrefix`. The page derives every configured local CKB address and can
+  delete the IndexedDB databases for those local prefixes.
 - `Fiber config`
   YAML config passed directly to `Fiber.start`.
 

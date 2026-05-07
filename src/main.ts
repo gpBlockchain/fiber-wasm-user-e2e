@@ -1,3 +1,4 @@
+import { ccc } from "@ckb-ccc/core";
 import { createIcons, icons } from "lucide";
 import {
   DEFAULT_FORM_VALUES,
@@ -20,6 +21,10 @@ if (!app) {
 let latestState: FlowRunState | undefined;
 let runner: FlowRunner | undefined;
 let activeScenario: FlowScenario = "testnet-single";
+let ckbAddressRenderToken = 0;
+let localAddressRenderToken = 0;
+
+const ckbClient = new ccc.ClientPublicTestnet();
 
 app.innerHTML = `
   <main class="app-shell">
@@ -61,10 +66,21 @@ app.innerHTML = `
           <input id="ckb-secret-key" autocomplete="off" spellcheck="false" />
         </label>
 
-        <label data-scenario-field="testnet-single">
-          Database prefix
-          <input id="database-prefix" autocomplete="off" />
-        </label>
+        <div class="assist-panel" data-scenario-field="testnet-single">
+          <span>CKB address</span>
+          <code id="ckb-address">--</code>
+        </div>
+
+        <div class="field-group" data-scenario-field="testnet-single">
+          <label>
+            Database prefix
+            <input id="database-prefix" autocomplete="off" />
+          </label>
+          <button class="danger-button" id="delete-indexeddb" type="button">
+            <i data-lucide="trash-2"></i>
+            Delete IndexedDB
+          </button>
+        </div>
 
         <label data-scenario-field="testnet-single">
           Peer pubkey
@@ -91,10 +107,20 @@ app.innerHTML = `
           <input id="local-node-count" inputmode="numeric" />
         </label>
 
-        <label data-scenario-field="local-multi-node">
-          Local nodes JSON
-          <textarea id="local-nodes-json" spellcheck="false"></textarea>
-        </label>
+        <div class="field-group" data-scenario-field="local-multi-node">
+          <label>
+            Local nodes JSON
+            <textarea id="local-nodes-json" spellcheck="false"></textarea>
+          </label>
+          <div class="assist-panel">
+            <span>Local CKB addresses</span>
+            <code id="local-ckb-addresses">--</code>
+          </div>
+          <button class="danger-button" id="delete-local-indexeddb" type="button">
+            <i data-lucide="trash-2"></i>
+            Delete local IndexedDB
+          </button>
+        </div>
 
         <label>
           Fiber config
@@ -169,7 +195,9 @@ const elements = {
   generateKeys: byId<HTMLButtonElement>("generate-keys"),
   fiberSecretKey: byId<HTMLInputElement>("fiber-secret-key"),
   ckbSecretKey: byId<HTMLInputElement>("ckb-secret-key"),
+  ckbAddress: byId("ckb-address"),
   databasePrefix: byId<HTMLInputElement>("database-prefix"),
+  deleteIndexedDb: byId<HTMLButtonElement>("delete-indexeddb"),
   peerPubkey: byId<HTMLInputElement>("peer-pubkey"),
   fundingAmount: byId<HTMLInputElement>("funding-amount"),
   paymentTargetPubkey: byId<HTMLInputElement>("payment-target-pubkey"),
@@ -177,6 +205,8 @@ const elements = {
   scenario: byId<HTMLSelectElement>("scenario"),
   localNodeCount: byId<HTMLInputElement>("local-node-count"),
   localNodesJson: byId<HTMLTextAreaElement>("local-nodes-json"),
+  localCkbAddresses: byId("local-ckb-addresses"),
+  deleteLocalIndexedDb: byId<HTMLButtonElement>("delete-local-indexeddb"),
   fiberConfig: byId<HTMLTextAreaElement>("fiber-config"),
   runFlow: byId<HTMLButtonElement>("run-flow"),
   stopFlow: byId<HTMLButtonElement>("stop-flow"),
@@ -213,6 +243,7 @@ const scenarioDrafts: Record<FlowScenario, ScenarioDraft> = {
 hydrateDefaults();
 renderRuntime();
 updateScenarioFields();
+refreshCkbAddressPreviews();
 renderEmptyState();
 createIcons({ icons });
 
@@ -230,6 +261,15 @@ elements.generateKeys.addEventListener("click", () => {
     elements.fiberSecretKey.value = randomSecretKeyHex();
     elements.ckbSecretKey.value = randomSecretKeyHex();
   }
+  refreshCkbAddressPreviews();
+});
+
+elements.ckbSecretKey.addEventListener("input", () => {
+  void renderSingleCkbAddress();
+});
+
+elements.localNodesJson.addEventListener("input", () => {
+  void renderLocalCkbAddresses();
 });
 
 elements.runFlow.addEventListener("click", async () => {
@@ -260,7 +300,17 @@ elements.scenario.addEventListener("change", () => {
   loadScenarioDraft(activeScenario);
   latestState = undefined;
   updateScenarioFields();
+  refreshCkbAddressPreviews();
   renderEmptyState();
+});
+
+elements.deleteIndexedDb.addEventListener("click", async () => {
+  await deleteIndexedDbPrefixes([elements.databasePrefix.value.trim()], elements.deleteIndexedDb);
+});
+
+elements.deleteLocalIndexedDb.addEventListener("click", async () => {
+  const prefixes = readLocalDatabasePrefixes();
+  await deleteIndexedDbPrefixes(prefixes, elements.deleteLocalIndexedDb);
 });
 
 elements.resetView.addEventListener("click", () => {
@@ -372,6 +422,109 @@ function loadScenarioDraft(scenario: FlowScenario): void {
   elements.fiberConfig.value = draft.fiberConfig;
 }
 
+function refreshCkbAddressPreviews(): void {
+  void renderSingleCkbAddress();
+  void renderLocalCkbAddresses();
+}
+
+async function renderSingleCkbAddress(): Promise<void> {
+  const token = ++ckbAddressRenderToken;
+  const secretKey = elements.ckbSecretKey.value.trim();
+
+  if (!secretKey) {
+    elements.ckbAddress.textContent = "--";
+    return;
+  }
+
+  if (!isHexSecret(secretKey)) {
+    elements.ckbAddress.textContent = "Invalid CKB secret key";
+    return;
+  }
+
+  elements.ckbAddress.textContent = "Deriving address...";
+  try {
+    const address = await deriveCkbAddress(secretKey);
+    if (token === ckbAddressRenderToken) {
+      elements.ckbAddress.textContent = address;
+    }
+  } catch (error) {
+    if (token === ckbAddressRenderToken) {
+      elements.ckbAddress.textContent =
+        error instanceof Error ? error.message : "Unable to derive CKB address";
+    }
+  }
+}
+
+async function renderLocalCkbAddresses(): Promise<void> {
+  const token = ++localAddressRenderToken;
+  const rows = readLocalNodeRecords();
+
+  if (rows.length === 0) {
+    elements.localCkbAddresses.textContent = "--";
+    return;
+  }
+
+  elements.localCkbAddresses.textContent = "Deriving addresses...";
+  const renderedRows = await Promise.all(
+    rows.map(async ({ name, ckbSecretKeyHex }, index) => {
+      const label = name || `local-${index + 1}`;
+      if (!isHexSecret(ckbSecretKeyHex)) {
+        return `${label}: invalid CKB secret key`;
+      }
+      try {
+        return `${label}: ${await deriveCkbAddress(ckbSecretKeyHex)}`;
+      } catch (error) {
+        return `${label}: ${error instanceof Error ? error.message : "unable to derive address"}`;
+      }
+    })
+  );
+
+  if (token === localAddressRenderToken) {
+    elements.localCkbAddresses.textContent = renderedRows.join("\n");
+  }
+}
+
+async function deriveCkbAddress(secretKey: string): Promise<string> {
+  const signer = new ccc.SignerCkbPrivateKey(ckbClient, secretKey);
+  return signer.getRecommendedAddress();
+}
+
+function readLocalNodeRecords(): Array<{
+  name: string;
+  ckbSecretKeyHex: string;
+  databasePrefix: string;
+}> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(elements.localNodesJson.value);
+  } catch {
+    return [];
+  }
+
+  if (!Array.isArray(parsed)) {
+    return [];
+  }
+
+  return parsed
+    .filter((value): value is Record<string, unknown> => !!value && typeof value === "object")
+    .map((record, index) => {
+      const name = stringField(record.name) || `local-${index + 1}`;
+      return {
+        name,
+        ckbSecretKeyHex: stringField(record.ckbSecretKeyHex),
+        databasePrefix:
+          stringField(record.databasePrefix) ||
+          `${scenarioDrafts["local-multi-node"].databasePrefix}-${name}`
+      };
+    });
+}
+
+function readLocalDatabasePrefixes(): string[] {
+  return readLocalNodeRecords()
+    .map((node) => node.databasePrefix)
+    .filter(Boolean);
+}
+
 function createDefaultLocalNodes(count: number, databasePrefix: string): LocalNodeConfig[] {
   return Array.from({ length: Math.max(2, count) }, (_, index) => ({
     name: `local-${index + 1}`,
@@ -451,6 +604,85 @@ function assertUnique(values: string[], label: string): void {
   if (new Set(normalized).size !== normalized.length) {
     throw new Error(`Local multi-node requires a different ${label} for every node.`);
   }
+}
+
+async function deleteIndexedDbPrefixes(prefixes: string[], button: HTMLButtonElement): Promise<void> {
+  const uniquePrefixes = Array.from(new Set(prefixes.map((prefix) => prefix.trim()).filter(Boolean)));
+  if (uniquePrefixes.length === 0) {
+    flashButtonLabel(button, "No prefix");
+    return;
+  }
+
+  const previousHtml = button.innerHTML;
+  button.disabled = true;
+  button.textContent = "Deleting...";
+
+  try {
+    const databaseNames = await indexedDbNamesForPrefixes(uniquePrefixes);
+    if (databaseNames.length === 0) {
+      flashButtonLabel(button, "Nothing found", previousHtml);
+      return;
+    }
+
+    await Promise.all(databaseNames.map(deleteIndexedDbByName));
+    flashButtonLabel(button, `Deleted ${databaseNames.length}`, previousHtml);
+  } catch (error) {
+    flashButtonLabel(
+      button,
+      error instanceof Error ? error.message : "Delete failed",
+      previousHtml
+    );
+  }
+}
+
+async function indexedDbNamesForPrefixes(prefixes: string[]): Promise<string[]> {
+  const factory = indexedDB as IDBFactory & {
+    databases?: () => Promise<Array<{ name?: string }>>;
+  };
+
+  if (!factory.databases) {
+    return prefixes;
+  }
+
+  const databases = await factory.databases();
+  const names = databases
+    .map((database) => database.name)
+    .filter((name): name is string => !!name);
+
+  const matchedNames = names.filter((name) =>
+    prefixes.some(
+      (prefix) =>
+        name === prefix ||
+        name.startsWith(`${prefix}-`) ||
+        name.startsWith(`${prefix}/`) ||
+        name.startsWith(`${prefix}:`)
+    )
+  );
+
+  return matchedNames.length > 0 ? matchedNames : prefixes;
+}
+
+function deleteIndexedDbByName(name: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.deleteDatabase(name);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error ?? new Error(`Failed to delete ${name}`));
+    request.onblocked = () => reject(new Error(`Close tabs using ${name} first`));
+  });
+}
+
+function flashButtonLabel(
+  button: HTMLButtonElement,
+  label: string,
+  restoreHtml = button.innerHTML
+): void {
+  button.disabled = false;
+  button.textContent = label;
+  window.setTimeout(() => {
+    button.innerHTML = restoreHtml;
+    button.disabled = false;
+    createIcons({ icons });
+  }, 1800);
 }
 
 function renderRuntime(): void {
