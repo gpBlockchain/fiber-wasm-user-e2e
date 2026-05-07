@@ -162,12 +162,12 @@ app.innerHTML = `
 
         <div class="main-grid">
           <aside class="learning-panel">
-            <section class="lesson-card" id="scenario-lesson"></section>
+            <section class="lesson-card resizable-panel" id="scenario-lesson"></section>
             <section class="lesson-card active-lesson" id="active-lesson"></section>
             <nav class="stepper" id="stepper"></nav>
           </aside>
 
-          <section class="log-panel">
+          <section class="log-panel resizable-panel">
             <div class="panel-head">
               <h2>运行日志</h2>
               <button class="icon-button" id="reset-view" type="button" title="Reset view">
@@ -177,7 +177,7 @@ app.innerHTML = `
             <div class="logs" id="logs"></div>
           </section>
 
-          <section class="log-panel rpc-log-panel">
+          <section class="log-panel rpc-log-panel resizable-panel">
             <div class="panel-head">
               <h2>RPC 日志</h2>
               <span class="log-cap" id="rpc-log-cap"></span>
