@@ -819,6 +819,10 @@ function renderLessonCard(label: string, status: FlowStep["status"], lesson: Ste
         <dd>${escapeHtml(lesson.concept)}</dd>
       </div>
       <div>
+        <dt>RPC call</dt>
+        <dd><code>${escapeHtml(lesson.rpc)}</code></dd>
+      </div>
+      <div>
         <dt>Why it matters</dt>
         <dd>${escapeHtml(lesson.meaning)}</dd>
       </div>
@@ -837,7 +841,7 @@ function renderStepDefinition(id: StepId, label: string): string {
       <span></span>
       <div>
         <p>${escapeHtml(label)}</p>
-        <small>${escapeHtml(lesson.concept)} · ${escapeHtml(lesson.meaning)}</small>
+        <small>${escapeHtml(lesson.concept)} · RPC: ${escapeHtml(lesson.rpc)}</small>
       </div>
     </div>
   `;
@@ -850,7 +854,7 @@ function renderStep(step: FlowStep): string {
       <span></span>
       <div>
         <p>${escapeHtml(step.label)}</p>
-        <small>${escapeHtml(lesson.concept)} · ${escapeHtml(lesson.meaning)}</small>
+        <small>${escapeHtml(lesson.concept)} · RPC: ${escapeHtml(lesson.rpc)}</small>
       </div>
       <time>${formatMs(step.durationMs)}</time>
     </div>

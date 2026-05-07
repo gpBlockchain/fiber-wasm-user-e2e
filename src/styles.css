@@ -364,6 +364,14 @@ textarea:focus {
   line-height: 1.5;
 }
 
+.lesson-card code {
+  overflow-wrap: anywhere;
+  color: #1d4354;
+  font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 11px;
+  font-weight: 650;
+}
+
 .lesson-card dl {
   display: grid;
   gap: 8px;
