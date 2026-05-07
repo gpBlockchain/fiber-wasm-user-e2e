@@ -20,6 +20,7 @@ try {
   await mkdir(reportsDir, { recursive: true });
   server = spawn("npm", ["run", "dev", "--", "--host", "127.0.0.1", "--port", String(port)], {
     cwd: rootDir,
+    detached: process.platform !== "win32",
     stdio: ["ignore", "pipe", "pipe"]
   });
   server.stdout.on("data", (chunk) => process.stdout.write(chunk));
@@ -48,7 +49,7 @@ try {
   console.log(`Wrote ${path.relative(rootDir, filePath)}`);
 } finally {
   await browser?.close();
-  server?.kill("SIGTERM");
+  await stopServer(server);
 }
 
 async function applyEnvironmentConfig(page) {
@@ -132,3 +133,36 @@ async function waitForServer(url) {
   throw new Error(`Timed out waiting for ${url}`);
 }
 
+async function stopServer(child) {
+  if (!child || child.exitCode !== null || child.signalCode !== null) {
+    return;
+  }
+
+  await new Promise((resolve) => {
+    const forceKillTimer = setTimeout(() => {
+      killChildProcess(child, "SIGKILL");
+      resolve();
+    }, 5_000);
+
+    child.once("close", () => {
+      clearTimeout(forceKillTimer);
+      resolve();
+    });
+
+    killChildProcess(child, "SIGTERM");
+  });
+}
+
+function killChildProcess(child, signal) {
+  try {
+    if (process.platform !== "win32" && child.pid) {
+      process.kill(-child.pid, signal);
+      return;
+    }
+    child.kill(signal);
+  } catch (error) {
+    if (error?.code !== "ESRCH") {
+      console.warn(`Failed to stop Vite dev server with ${signal}: ${error.message}`);
+    }
+  }
+}
