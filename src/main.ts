@@ -25,6 +25,7 @@ let activeScenario: FlowScenario = "testnet-single";
 let ckbAddressRenderToken = 0;
 let localAddressRenderToken = 0;
 const CONFIG_COLLAPSED_STORAGE_KEY = "fiber-wasm-config-collapsed";
+const MAIN_GRID_LAYOUT_STORAGE_KEY = "fiber-wasm-main-grid-layout";
 
 const ckbClient = new ccc.ClientPublicTestnet();
 
@@ -160,14 +161,22 @@ app.innerHTML = `
           </div>
         </div>
 
-        <div class="main-grid">
-          <aside class="learning-panel">
+        <div class="main-grid" id="main-grid">
+          <aside class="learning-panel" id="learning-panel">
             <section class="lesson-card resizable-panel" id="scenario-lesson"></section>
             <section class="lesson-card active-lesson" id="active-lesson"></section>
             <nav class="stepper" id="stepper"></nav>
           </aside>
 
-          <section class="log-panel resizable-panel">
+          <div
+            class="grid-resizer"
+            data-grid-resizer="learning-run"
+            role="separator"
+            aria-label="Resize learning and run logs"
+            title="拖动调整 Learning goal 和运行日志宽度"
+          ></div>
+
+          <section class="log-panel run-log-panel resizable-panel" id="run-log-panel">
             <div class="panel-head">
               <h2>运行日志</h2>
               <button class="icon-button" id="reset-view" type="button" title="Reset view">
@@ -177,7 +186,15 @@ app.innerHTML = `
             <div class="logs" id="logs"></div>
           </section>
 
-          <section class="log-panel rpc-log-panel resizable-panel">
+          <div
+            class="grid-resizer"
+            data-grid-resizer="run-rpc"
+            role="separator"
+            aria-label="Resize run and RPC logs"
+            title="拖动调整运行日志和 RPC 日志宽度"
+          ></div>
+
+          <section class="log-panel rpc-log-panel resizable-panel" id="rpc-log-panel">
             <div class="panel-head">
               <h2>RPC 日志</h2>
               <span class="log-cap" id="rpc-log-cap"></span>
@@ -204,6 +221,10 @@ app.innerHTML = `
 
 const elements = {
   workspace: byId("workspace"),
+  mainGrid: byId("main-grid"),
+  learningPanel: byId("learning-panel"),
+  runLogPanel: byId("run-log-panel"),
+  rpcLogPanel: byId("rpc-log-panel"),
   isolationStatus: byId("isolation-status"),
   runStatus: byId("run-status"),
   toggleConfig: byId<HTMLButtonElement>("toggle-config"),
@@ -264,6 +285,8 @@ refreshCkbAddressPreviews();
 renderEmptyState();
 createIcons({ icons });
 applyConfigCollapsed(localStorage.getItem(CONFIG_COLLAPSED_STORAGE_KEY) === "true");
+restoreMainGridLayout();
+setupMainGridResizers();
 
 elements.toggleConfig.addEventListener("click", () => {
   const shouldCollapse = !elements.workspace.classList.contains("config-collapsed");
@@ -725,6 +748,87 @@ function applyConfigCollapsed(isCollapsed: boolean): void {
   createIcons({ icons });
 }
 
+function setupMainGridResizers(): void {
+  elements.mainGrid
+    .querySelectorAll<HTMLElement>("[data-grid-resizer]")
+    .forEach((resizer) => {
+      resizer.addEventListener("pointerdown", (event) => {
+        if (window.matchMedia("(max-width: 1180px)").matches) {
+          return;
+        }
+
+        const resizerKind = resizer.dataset.gridResizer;
+        const isLearningRun = resizerKind === "learning-run";
+        const leftPanel = isLearningRun ? elements.learningPanel : elements.runLogPanel;
+        const rightPanel = isLearningRun ? elements.runLogPanel : elements.rpcLogPanel;
+        const leftVariable = isLearningRun ? "--learning-panel-width" : "--run-log-width";
+        const rightVariable = isLearningRun ? "--run-log-width" : "--rpc-log-width";
+        const minLeftWidth = isLearningRun ? 240 : 260;
+        const minRightWidth = 260;
+        const startX = event.clientX;
+        const startLeftWidth = leftPanel.getBoundingClientRect().width;
+        const startRightWidth = rightPanel.getBoundingClientRect().width;
+        const totalWidth = startLeftWidth + startRightWidth;
+
+        event.preventDefault();
+        resizer.setPointerCapture(event.pointerId);
+        document.body.classList.add("is-resizing-grid");
+
+        const handlePointerMove = (moveEvent: PointerEvent) => {
+          const delta = moveEvent.clientX - startX;
+          const nextLeftWidth = clamp(
+            startLeftWidth + delta,
+            minLeftWidth,
+            totalWidth - minRightWidth
+          );
+          const nextRightWidth = totalWidth - nextLeftWidth;
+
+          elements.mainGrid.style.setProperty(leftVariable, `${Math.round(nextLeftWidth)}px`);
+          elements.mainGrid.style.setProperty(rightVariable, `${Math.round(nextRightWidth)}px`);
+        };
+
+        const handlePointerUp = () => {
+          document.body.classList.remove("is-resizing-grid");
+          saveMainGridLayout();
+          window.removeEventListener("pointermove", handlePointerMove);
+          window.removeEventListener("pointerup", handlePointerUp);
+          window.removeEventListener("pointercancel", handlePointerUp);
+        };
+
+        window.addEventListener("pointermove", handlePointerMove);
+        window.addEventListener("pointerup", handlePointerUp, { once: true });
+        window.addEventListener("pointercancel", handlePointerUp, { once: true });
+      });
+    });
+}
+
+function restoreMainGridLayout(): void {
+  const savedLayout = localStorage.getItem(MAIN_GRID_LAYOUT_STORAGE_KEY);
+  if (!savedLayout) {
+    return;
+  }
+
+  try {
+    const layout = JSON.parse(savedLayout) as Record<string, string>;
+    Object.entries(layout).forEach(([property, value]) => {
+      if (property.startsWith("--") && /^\d+px$/.test(value)) {
+        elements.mainGrid.style.setProperty(property, value);
+      }
+    });
+  } catch {
+    localStorage.removeItem(MAIN_GRID_LAYOUT_STORAGE_KEY);
+  }
+}
+
+function saveMainGridLayout(): void {
+  const layout = {
+    "--learning-panel-width": elements.mainGrid.style.getPropertyValue("--learning-panel-width"),
+    "--run-log-width": elements.mainGrid.style.getPropertyValue("--run-log-width"),
+    "--rpc-log-width": elements.mainGrid.style.getPropertyValue("--rpc-log-width")
+  };
+  localStorage.setItem(MAIN_GRID_LAYOUT_STORAGE_KEY, JSON.stringify(layout));
+}
+
 function updateScenarioFields(): void {
   const scenario = elements.scenario.value;
   scenarioFields.forEach((field) => {
@@ -944,6 +1048,10 @@ function byId<T extends HTMLElement = HTMLElement>(id: string): T {
     throw new Error(`Missing element #${id}`);
   }
   return element as T;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), Math.max(min, max));
 }
 
 function formatMs(value?: number): string {

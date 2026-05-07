@@ -40,6 +40,12 @@ button:disabled {
   opacity: 0.56;
 }
 
+body.is-resizing-grid,
+body.is-resizing-grid * {
+  cursor: col-resize !important;
+  user-select: none;
+}
+
 .app-shell {
   width: min(1540px, calc(100vw - 32px));
   margin: 0 auto;
@@ -353,24 +359,55 @@ textarea:focus {
 
 .main-grid {
   display: grid;
-  grid-template-columns: minmax(360px, 0.85fr) minmax(0, 1.35fr) 220px;
-  gap: 14px;
+  grid-template-columns:
+    minmax(240px, var(--learning-panel-width, 360px))
+    10px
+    minmax(260px, var(--run-log-width, 1.2fr))
+    10px
+    minmax(260px, var(--rpc-log-width, 1fr));
+  gap: 10px;
   align-items: stretch;
 }
 
 .learning-panel {
+  grid-column: 1;
   display: grid;
   align-content: start;
   gap: 10px;
   min-width: 0;
 }
 
+.grid-resizer {
+  position: relative;
+  align-self: stretch;
+  min-height: 360px;
+  border-radius: 999px;
+  cursor: col-resize;
+}
+
+.grid-resizer::before {
+  content: "";
+  position: absolute;
+  inset: 12px 4px;
+  border-left: 1px solid #cfd6d1;
+}
+
+.grid-resizer:hover::before,
+.grid-resizer:focus-visible::before {
+  border-color: #2b6f8f;
+  box-shadow: 0 0 0 3px rgba(43, 111, 143, 0.12);
+}
+
 .resizable-panel {
-  resize: both;
+  resize: vertical;
   overflow: auto;
   min-width: 240px;
   min-height: 150px;
   max-width: 100%;
+}
+
+.lesson-card.resizable-panel {
+  resize: both;
 }
 
 .lesson-card {
@@ -527,6 +564,14 @@ textarea:focus {
   padding: 14px;
 }
 
+.run-log-panel {
+  grid-column: 3;
+}
+
+.rpc-log-panel {
+  grid-column: 5;
+}
+
 .logs {
   display: grid;
   align-content: start;
@@ -598,7 +643,9 @@ textarea:focus {
 }
 
 .metrics-panel {
+  grid-column: 1 / -1;
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   align-content: start;
   gap: 8px;
   padding: 12px;
@@ -642,6 +689,17 @@ textarea:focus {
   .main-grid,
   .summary-band {
     grid-template-columns: 1fr;
+  }
+
+  .learning-panel,
+  .run-log-panel,
+  .rpc-log-panel,
+  .metrics-panel {
+    grid-column: auto;
+  }
+
+  .grid-resizer {
+    display: none;
   }
 
   .workspace.config-collapsed {
