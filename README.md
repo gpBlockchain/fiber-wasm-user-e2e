@@ -88,6 +88,9 @@ npm run build
 
 ## Inputs
 
+- The step panel is written as a teaching path: each scenario has a learning
+  goal, the current step explains the concept being tested, and every step
+  lists what users should watch in the logs or metrics.
 - `Fiber secret key`
   Used by the WASM Fiber node identity.
 - `CKB secret key`

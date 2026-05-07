@@ -7,9 +7,10 @@ import {
   MAX_RPC_LOGS,
   getFlowStepDefinitions
 } from "./constants";
+import { SCENARIO_LESSONS, STEP_LESSONS, type StepLesson } from "./education";
 import { randomSecretKeyHex } from "./fiberClient";
 import { FlowRunner, createRawExportSnapshot } from "./flowRunner";
-import type { FlowConfig, FlowRunState, FlowScenario, FlowStep, LocalNodeConfig } from "./types";
+import type { FlowConfig, FlowRunState, FlowScenario, FlowStep, LocalNodeConfig, StepId } from "./types";
 import "./styles.css";
 
 const app = document.querySelector<HTMLDivElement>("#app");
@@ -152,7 +153,11 @@ app.innerHTML = `
         </div>
 
         <div class="main-grid">
-          <nav class="stepper" id="stepper"></nav>
+          <aside class="learning-panel">
+            <section class="lesson-card" id="scenario-lesson"></section>
+            <section class="lesson-card active-lesson" id="active-lesson"></section>
+            <nav class="stepper" id="stepper"></nav>
+          </aside>
 
           <section class="log-panel">
             <div class="panel-head">
@@ -214,6 +219,8 @@ const elements = {
   copyJson: byId<HTMLButtonElement>("copy-json"),
   nodePubkey: byId("node-pubkey"),
   lastError: byId("last-error"),
+  scenarioLesson: byId("scenario-lesson"),
+  activeLesson: byId("active-lesson"),
   stepper: byId("stepper"),
   logs: byId("logs"),
   rpcLogCap: byId("rpc-log-cap"),
@@ -700,13 +707,15 @@ function updateScenarioFields(): void {
 
 function renderEmptyState(): void {
   const scenario = elements.scenario.value as FlowConfig["scenario"];
-  const steps = getFlowStepDefinitions(scenario).map(([, label]) => label);
+  const stepDefinitions = getFlowStepDefinitions(scenario);
 
   elements.runStatus.textContent = "Idle";
   elements.nodePubkey.textContent = "--";
   elements.lastError.textContent = "--";
-  elements.stepper.innerHTML = steps
-    .map((label) => `<div class="step idle"><span></span><p>${escapeHtml(label)}</p></div>`)
+  elements.scenarioLesson.innerHTML = renderScenarioLesson(scenario);
+  elements.activeLesson.innerHTML = renderActiveLessonForDefinition(stepDefinitions[0]);
+  elements.stepper.innerHTML = stepDefinitions
+    .map(([id, label]) => renderStepDefinition(id, label))
     .join("");
   elements.logs.innerHTML = `<div class="empty-log">No run yet.</div>`;
   elements.rpcLogs.innerHTML = `<div class="empty-log">No RPC calls yet.</div>`;
@@ -738,6 +747,8 @@ function renderState(state: FlowRunState): void {
   elements.runStatus.className = `runtime-pill ${state.running ? "" : state.lastError ? "bad" : "ok"}`;
   elements.nodePubkey.textContent = state.nodePubkey || "--";
   elements.lastError.textContent = state.lastError || "--";
+  elements.scenarioLesson.innerHTML = renderScenarioLesson(state.scenario);
+  elements.activeLesson.innerHTML = renderActiveLesson(state);
   elements.stepper.innerHTML = state.steps.map(renderStep).join("");
   elements.logs.innerHTML = state.logs.map(renderLog).join("");
   elements.logs.scrollTop = elements.logs.scrollHeight;
@@ -766,11 +777,81 @@ function renderRpcLog(log: FlowRunState["rpcLogs"][number]): string {
   `;
 }
 
+function renderScenarioLesson(scenario: FlowConfig["scenario"]): string {
+  const lesson = SCENARIO_LESSONS[scenario];
+  return `
+    <span class="lesson-kicker">Learning goal</span>
+    <h2>${escapeHtml(lesson.title)}</h2>
+    <p>${escapeHtml(lesson.goal)}</p>
+    <p>${escapeHtml(lesson.outcome)}</p>
+  `;
+}
+
+function renderActiveLesson(state: FlowRunState): string {
+  const step =
+    state.steps.find((item) => item.status === "running") ??
+    state.steps.find((item) => item.status === "failed") ??
+    state.steps.find((item) => item.status === "idle") ??
+    state.steps[state.steps.length - 1];
+
+  return step ? renderActiveLessonForStep(step) : "";
+}
+
+function renderActiveLessonForStep(step: FlowStep): string {
+  const lesson = STEP_LESSONS[step.id];
+  return renderLessonCard(step.label, step.status, lesson);
+}
+
+function renderActiveLessonForDefinition(
+  definition: ReturnType<typeof getFlowStepDefinitions>[number]
+): string {
+  const [id, label] = definition;
+  return renderLessonCard(label, "idle", STEP_LESSONS[id]);
+}
+
+function renderLessonCard(label: string, status: FlowStep["status"], lesson: StepLesson): string {
+  return `
+    <span class="lesson-kicker">${escapeHtml(statusLabel(status))}</span>
+    <h2>${escapeHtml(label)}</h2>
+    <dl>
+      <div>
+        <dt>Concept</dt>
+        <dd>${escapeHtml(lesson.concept)}</dd>
+      </div>
+      <div>
+        <dt>Why it matters</dt>
+        <dd>${escapeHtml(lesson.meaning)}</dd>
+      </div>
+      <div>
+        <dt>What to watch</dt>
+        <dd>${escapeHtml(lesson.observe)}</dd>
+      </div>
+    </dl>
+  `;
+}
+
+function renderStepDefinition(id: StepId, label: string): string {
+  const lesson = STEP_LESSONS[id];
+  return `
+    <div class="step idle">
+      <span></span>
+      <div>
+        <p>${escapeHtml(label)}</p>
+        <small>${escapeHtml(lesson.concept)} · ${escapeHtml(lesson.meaning)}</small>
+      </div>
+    </div>
+  `;
+}
+
 function renderStep(step: FlowStep): string {
+  const lesson = STEP_LESSONS[step.id];
   return `
     <div class="step ${step.status}">
       <span></span>
-      <p>${escapeHtml(step.label)}</p>
+      <div>
+        <p>${escapeHtml(step.label)}</p>
+        <small>${escapeHtml(lesson.concept)} · ${escapeHtml(lesson.meaning)}</small>
+      </div>
       <time>${formatMs(step.durationMs)}</time>
     </div>
   `;
@@ -841,6 +922,21 @@ function formatMs(value?: number): string {
 
 function valueOrDash(value?: number): string {
   return value === undefined ? "--" : `${value}`;
+}
+
+function statusLabel(status: FlowStep["status"]): string {
+  switch (status) {
+    case "running":
+      return "Now learning";
+    case "success":
+      return "Completed lesson";
+    case "failed":
+      return "Needs attention";
+    case "skipped":
+      return "Skipped lesson";
+    default:
+      return "First lesson";
+  }
 }
 
 function escapeHtml(value: string): string {

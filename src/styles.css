@@ -319,9 +319,67 @@ textarea:focus {
 
 .main-grid {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr) 220px;
+  grid-template-columns: 320px minmax(0, 1fr) 220px;
   gap: 14px;
   align-items: stretch;
+}
+
+.learning-panel {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.lesson-card {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #dce1dd;
+  border-radius: 8px;
+  background: #fbfcfa;
+}
+
+.active-lesson {
+  border-color: #abc8d3;
+  background: #f0f8fa;
+}
+
+.lesson-kicker {
+  color: #65736b;
+  font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 11px;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.lesson-card h2 {
+  font-size: 15px;
+}
+
+.lesson-card p,
+.lesson-card dd {
+  color: #4d5a55;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.lesson-card dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.lesson-card dt {
+  margin-bottom: 2px;
+  color: #52605a;
+  font-size: 11px;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.lesson-card dd {
+  margin: 0;
 }
 
 .stepper {
@@ -334,7 +392,7 @@ textarea:focus {
   display: grid;
   grid-template-columns: 12px minmax(0, 1fr) auto;
   gap: 8px;
-  align-items: center;
+  align-items: start;
   min-height: 34px;
   padding: 8px;
   border: 1px solid #dce1dd;
@@ -360,6 +418,18 @@ textarea:focus {
 .step p {
   font-size: 13px;
   font-weight: 700;
+}
+
+.step small {
+  display: -webkit-box;
+  margin-top: 3px;
+  overflow: hidden;
+  color: #647168;
+  font-size: 11px;
+  font-weight: 560;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .step time {
