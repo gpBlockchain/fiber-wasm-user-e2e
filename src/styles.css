@@ -168,6 +168,10 @@ label {
   font-weight: 700;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 input,
 textarea {
   width: 100%;
