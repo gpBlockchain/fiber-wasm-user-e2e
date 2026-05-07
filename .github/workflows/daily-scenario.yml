@@ -33,12 +33,7 @@ jobs:
         run: npm run ci:scenario
         env:
           CI_SCENARIO: testnet-single
-          CI_FIBER_SECRET_KEY: ${{ secrets.CI_FIBER_SECRET_KEY }}
           CI_CKB_SECRET_KEY: ${{ secrets.CI_CKB_SECRET_KEY }}
-          CI_PEER_PUBKEY: ${{ secrets.CI_PEER_PUBKEY }}
-          CI_PAYMENT_TARGET_PUBKEY: ${{ secrets.CI_PAYMENT_TARGET_PUBKEY }}
-          CI_FUNDING_AMOUNT: ${{ vars.CI_FUNDING_AMOUNT }}
-          CI_PAYMENT_AMOUNT: ${{ vars.CI_PAYMENT_AMOUNT }}
 
       - name: Commit report
         run: |
@@ -51,4 +46,3 @@ jobs:
           fi
           git commit -m "Add daily Fiber WASM scenario report"
           git push
-

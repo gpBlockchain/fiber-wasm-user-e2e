@@ -110,17 +110,9 @@ Chromium with Playwright, runs the `Testnet single node` scenario, writes a
 report under `public/reports/`, updates `public/reports/index.json`, and commits
 the result.
 
-Configure these GitHub secrets before expecting a successful funded run:
+Configure this GitHub secret before expecting a successful funded run:
 
-- `CI_FIBER_SECRET_KEY`
 - `CI_CKB_SECRET_KEY`
-- `CI_PEER_PUBKEY`
-- `CI_PAYMENT_TARGET_PUBKEY`
-
-Optional GitHub variables:
-
-- `CI_FUNDING_AMOUNT`
-- `CI_PAYMENT_AMOUNT`
 
 If the funded key or peer is unavailable, the workflow still records the failed
 run as a report so the history page shows what broke.
