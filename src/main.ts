@@ -1,13 +1,14 @@
 import { createIcons, icons } from "lucide";
 import {
   DEFAULT_FORM_VALUES,
+  DEFAULT_LOCAL_MULTI_NODE_CONFIG,
   DEFAULT_TESTNET_CONFIG,
   MAX_RPC_LOGS,
   getFlowStepDefinitions
 } from "./constants";
 import { randomSecretKeyHex } from "./fiberClient";
 import { FlowRunner, createRawExportSnapshot } from "./flowRunner";
-import type { FlowConfig, FlowRunState, FlowStep, LocalNodeConfig } from "./types";
+import type { FlowConfig, FlowRunState, FlowScenario, FlowStep, LocalNodeConfig } from "./types";
 import "./styles.css";
 
 const app = document.querySelector<HTMLDivElement>("#app");
@@ -18,6 +19,7 @@ if (!app) {
 
 let latestState: FlowRunState | undefined;
 let runner: FlowRunner | undefined;
+let activeScenario: FlowScenario = "testnet-single";
 
 app.innerHTML = `
   <main class="app-shell">
@@ -190,6 +192,23 @@ const elements = {
   rawJson: byId("raw-json")
 };
 const scenarioFields = document.querySelectorAll<HTMLElement>("[data-scenario-field]");
+type ScenarioDraft = {
+  fiberSecretKey: string;
+  ckbSecretKey: string;
+  databasePrefix: string;
+  peerPubkey: string;
+  fundingAmount: string;
+  paymentTargetPubkey: string;
+  paymentAmount: string;
+  localNodeCount: string;
+  localNodesJson: string;
+  fiberConfig: string;
+};
+
+const scenarioDrafts: Record<FlowScenario, ScenarioDraft> = {
+  "testnet-single": createScenarioDraft("testnet-single"),
+  "local-multi-node": createScenarioDraft("local-multi-node")
+};
 
 hydrateDefaults();
 renderRuntime();
@@ -198,13 +217,19 @@ renderEmptyState();
 createIcons({ icons });
 
 elements.generateKeys.addEventListener("click", () => {
-  elements.fiberSecretKey.value = randomSecretKeyHex();
-  elements.ckbSecretKey.value = randomSecretKeyHex();
-  elements.localNodesJson.value = JSON.stringify(
-    createDefaultLocalNodes(Number.parseInt(elements.localNodeCount.value, 10) || 2),
-    null,
-    2
-  );
+  if (activeScenario === "local-multi-node") {
+    elements.localNodesJson.value = JSON.stringify(
+      createDefaultLocalNodes(
+        Number.parseInt(elements.localNodeCount.value, 10) || DEFAULT_FORM_VALUES.localNodeCount,
+        elements.databasePrefix.value || scenarioDrafts["local-multi-node"].databasePrefix
+      ),
+      null,
+      2
+    );
+  } else {
+    elements.fiberSecretKey.value = randomSecretKeyHex();
+    elements.ckbSecretKey.value = randomSecretKeyHex();
+  }
 });
 
 elements.runFlow.addEventListener("click", async () => {
@@ -230,6 +255,9 @@ elements.stopFlow.addEventListener("click", async () => {
 });
 
 elements.scenario.addEventListener("change", () => {
+  saveScenarioDraft(activeScenario);
+  activeScenario = elements.scenario.value as FlowScenario;
+  loadScenarioDraft(activeScenario);
   latestState = undefined;
   updateScenarioFields();
   renderEmptyState();
@@ -246,18 +274,7 @@ elements.copyJson.addEventListener("click", async () => {
 });
 
 function hydrateDefaults(): void {
-  elements.fiberSecretKey.value = randomSecretKeyHex();
-  elements.ckbSecretKey.value = randomSecretKeyHex();
-  elements.databasePrefix.value = DEFAULT_FORM_VALUES.databasePrefix;
-  elements.fundingAmount.value = DEFAULT_FORM_VALUES.fundingAmount;
-  elements.paymentAmount.value = DEFAULT_FORM_VALUES.paymentAmount;
-  elements.localNodeCount.value = String(DEFAULT_FORM_VALUES.localNodeCount);
-  elements.localNodesJson.value = JSON.stringify(
-    createDefaultLocalNodes(DEFAULT_FORM_VALUES.localNodeCount),
-    null,
-    2
-  );
-  elements.fiberConfig.value = DEFAULT_TESTNET_CONFIG;
+  loadScenarioDraft(activeScenario);
 }
 
 function readConfig(): FlowConfig {
@@ -278,7 +295,10 @@ function readConfig(): FlowConfig {
     configYaml: elements.fiberConfig.value,
     fiberSecretKeyHex: elements.fiberSecretKey.value,
     ckbSecretKeyHex: elements.ckbSecretKey.value,
-    databasePrefix: elements.databasePrefix.value.trim() || DEFAULT_FORM_VALUES.databasePrefix,
+    databasePrefix:
+      elements.databasePrefix.value.trim() ||
+      scenarioDrafts[scenario].databasePrefix ||
+      DEFAULT_FORM_VALUES.testnetDatabasePrefix,
     peerPubkey,
     fundingAmount: elements.fundingAmount.value.trim(),
     paymentTargetPubkey,
@@ -296,14 +316,70 @@ function readConfig(): FlowConfig {
   };
 }
 
-function createDefaultLocalNodes(count: number): LocalNodeConfig[] {
+function createScenarioDraft(scenario: FlowScenario): ScenarioDraft {
+  const databasePrefix =
+    scenario === "local-multi-node"
+      ? DEFAULT_FORM_VALUES.localDatabasePrefix
+      : DEFAULT_FORM_VALUES.testnetDatabasePrefix;
+
+  return {
+    fiberSecretKey: randomSecretKeyHex(),
+    ckbSecretKey: randomSecretKeyHex(),
+    databasePrefix,
+    peerPubkey: "",
+    fundingAmount: DEFAULT_FORM_VALUES.fundingAmount,
+    paymentTargetPubkey: "",
+    paymentAmount: DEFAULT_FORM_VALUES.paymentAmount,
+    localNodeCount: String(DEFAULT_FORM_VALUES.localNodeCount),
+    localNodesJson: JSON.stringify(
+      createDefaultLocalNodes(DEFAULT_FORM_VALUES.localNodeCount, databasePrefix),
+      null,
+      2
+    ),
+    fiberConfig:
+      scenario === "local-multi-node" ? DEFAULT_LOCAL_MULTI_NODE_CONFIG : DEFAULT_TESTNET_CONFIG
+  };
+}
+
+function saveScenarioDraft(scenario: FlowScenario): void {
+  scenarioDrafts[scenario] = {
+    fiberSecretKey: elements.fiberSecretKey.value,
+    ckbSecretKey: elements.ckbSecretKey.value,
+    databasePrefix: elements.databasePrefix.value,
+    peerPubkey: elements.peerPubkey.value,
+    fundingAmount: elements.fundingAmount.value,
+    paymentTargetPubkey: elements.paymentTargetPubkey.value,
+    paymentAmount: elements.paymentAmount.value,
+    localNodeCount: elements.localNodeCount.value,
+    localNodesJson: elements.localNodesJson.value,
+    fiberConfig: elements.fiberConfig.value
+  };
+}
+
+function loadScenarioDraft(scenario: FlowScenario): void {
+  const draft = scenarioDrafts[scenario];
+
+  elements.scenario.value = scenario;
+  elements.fiberSecretKey.value = draft.fiberSecretKey;
+  elements.ckbSecretKey.value = draft.ckbSecretKey;
+  elements.databasePrefix.value = draft.databasePrefix;
+  elements.peerPubkey.value = draft.peerPubkey;
+  elements.fundingAmount.value = draft.fundingAmount;
+  elements.paymentTargetPubkey.value = draft.paymentTargetPubkey;
+  elements.paymentAmount.value = draft.paymentAmount;
+  elements.localNodeCount.value = draft.localNodeCount;
+  elements.localNodesJson.value = draft.localNodesJson;
+  elements.fiberConfig.value = draft.fiberConfig;
+}
+
+function createDefaultLocalNodes(count: number, databasePrefix: string): LocalNodeConfig[] {
   return Array.from({ length: Math.max(2, count) }, (_, index) => ({
     name: `local-${index + 1}`,
     fiberSecretKeyHex: randomSecretKeyHex(),
     ckbSecretKeyHex: "REPLACE_WITH_FUNDED_TESTNET_PRIVATE_KEY",
     externalPeerPubkey: "REPLACE_WITH_EXTERNAL_FIBER_PUBKEY",
     fundingAmount: DEFAULT_FORM_VALUES.fundingAmount,
-    databasePrefix: `${DEFAULT_FORM_VALUES.databasePrefix}-local-${index + 1}`
+    databasePrefix: `${databasePrefix}-local-${index + 1}`
   }));
 }
 

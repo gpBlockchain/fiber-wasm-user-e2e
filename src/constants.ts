@@ -63,8 +63,19 @@ services:
   - ckb
 `;
 
+export const DEFAULT_LOCAL_MULTI_NODE_CONFIG = DEFAULT_TESTNET_CONFIG.replace(
+  "# Fiber WASM testnet demo config.",
+  [
+    "# Fiber WASM local multi-node testnet config.",
+    "# Each browser node uses a separate key and IndexedDB prefix from Local nodes JSON."
+  ].join("\n")
+)
+  .replace('listening_addr: "/ip4/127.0.0.1/tcp/8228/ws"', 'listening_addr: "/ip4/127.0.0.1/tcp/8328/ws"')
+  .replace('listening_addr: "127.0.0.1:8227"', 'listening_addr: "127.0.0.1:8327"');
+
 export const DEFAULT_FORM_VALUES = {
-  databasePrefix: `testnet-demo-${new Date().toISOString().slice(0, 10)}`,
+  testnetDatabasePrefix: `testnet-single-${new Date().toISOString().slice(0, 10)}`,
+  localDatabasePrefix: `local-multi-node-${new Date().toISOString().slice(0, 10)}`,
   fundingAmount: "100000000000",
   paymentAmount: "1000",
   pollIntervalMs: 1000,

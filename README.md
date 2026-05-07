@@ -107,7 +107,9 @@ npm run build
   Keysend amount in shannons.
 - `Scenario`
   `Testnet single node` and `Local multi-node` use different step lists,
-  validations, and metric cards.
+  validations, metric cards, and form/config presets. Switching scenarios
+  preserves each scenario's in-progress draft so single-node values do not
+  bleed into local multi-node runs.
 - `Local node count`
   Number of local WASM nodes used by the local multi-node scenario.
 - `Local nodes JSON`
