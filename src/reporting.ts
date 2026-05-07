@@ -1,4 +1,3 @@
-import { createRawExportSnapshot } from "./flowRunner";
 import type { FlowRunState, FlowScenario } from "./types";
 
 export const LOCAL_REPORT_HISTORY_KEY = "fiber-wasm-report-history";
@@ -16,13 +15,16 @@ export interface FlowReportSummary {
   endedAt?: string;
   durationMs?: number;
   lastError?: string;
-  stepCount: number;
-  successSteps: number;
-  failedSteps: number;
-  skippedSteps: number;
-  flowLogCount: number;
-  rpcLogCount: number;
-  rpcLogDroppedCount: number;
+}
+
+export interface FlowStepDuration {
+  id: string;
+  label: string;
+  status: string;
+  startedAt?: string;
+  endedAt?: string;
+  durationMs?: number;
+  durationSeconds?: number;
 }
 
 export interface FlowReport {
@@ -30,12 +32,7 @@ export interface FlowReport {
   generatedAt: string;
   source: ReportSource;
   summary: FlowReportSummary;
-  run: Record<string, unknown>;
-  environment: {
-    userAgent?: string;
-    url?: string;
-    timezone?: string;
-  };
+  steps: FlowStepDuration[];
 }
 
 export interface ReportIndexEntry extends FlowReportSummary {
@@ -56,12 +53,16 @@ export function createFlowReport(state: FlowRunState, source: ReportSource): Flo
     generatedAt: new Date().toISOString(),
     source,
     summary: summarizeFlowState(state),
-    run: createRawExportSnapshot(state),
-    environment: {
-      userAgent: globalThis.navigator?.userAgent,
-      url: globalThis.location?.href,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-    }
+    steps: state.steps.map((step) => ({
+      id: step.id,
+      label: step.label,
+      status: step.status,
+      startedAt: step.startedAt,
+      endedAt: step.endedAt,
+      durationMs: step.durationMs,
+      durationSeconds:
+        step.durationMs === undefined ? undefined : Number((step.durationMs / 1000).toFixed(3))
+    }))
   };
 }
 
@@ -76,14 +77,7 @@ export function summarizeFlowState(state: FlowRunState): FlowReportSummary {
       state.startedAt && state.endedAt
         ? new Date(state.endedAt).getTime() - new Date(state.startedAt).getTime()
         : undefined,
-    lastError: state.lastError,
-    stepCount: state.steps.length,
-    successSteps: state.steps.filter((step) => step.status === "success").length,
-    failedSteps: state.steps.filter((step) => step.status === "failed").length,
-    skippedSteps: state.steps.filter((step) => step.status === "skipped").length,
-    flowLogCount: state.logs.length,
-    rpcLogCount: state.rpcLogs.length,
-    rpcLogDroppedCount: state.rpcLogDroppedCount
+    lastError: state.lastError
   };
 }
 
@@ -125,4 +119,3 @@ export function saveLocalFlowReport(report: FlowReport): FlowReport[] {
   localStorage.setItem(LOCAL_REPORT_HISTORY_KEY, JSON.stringify(reports));
   return reports;
 }
-

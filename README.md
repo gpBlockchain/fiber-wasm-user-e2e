@@ -93,8 +93,8 @@ npm run build
 ## Reports and History
 
 When a flow reaches `Finished` or `Failed`, the page generates a structured
-report JSON. The report includes a summary, the bounded raw run snapshot, step
-results, metrics, flow logs, capped RPC logs, and browser environment data.
+report JSON. The report is intentionally small: it includes run metadata and the
+time spent by each step, without RPC logs or large result payloads.
 
 - Use the JSON button in the `Raw JSON` panel to download the latest report.
 - Open `?view=history` or the `History` tab to inspect previous reports.
