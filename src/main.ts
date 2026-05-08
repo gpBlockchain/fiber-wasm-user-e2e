@@ -47,7 +47,7 @@ app.innerHTML = `
     <header class="topbar">
       <div>
         <p class="eyebrow">Fiber WASM Testnet</p>
-        <h1>用户体验流程演示</h1>
+        <h1>User Experience Flow Demo</h1>
       </div>
       <div class="topbar-actions">
         <nav class="view-nav" aria-label="Views">
@@ -64,7 +64,7 @@ app.innerHTML = `
     <section class="workspace" id="workspace">
       <aside class="config-panel" aria-label="Configuration">
         <div class="panel-head">
-          <h2>配置</h2>
+          <h2>Configuration</h2>
           <div class="panel-actions">
             <button class="icon-button" id="toggle-config" type="button" title="Collapse config" aria-expanded="true">
               <i data-lucide="panel-left-close"></i>
@@ -192,12 +192,12 @@ app.innerHTML = `
             data-grid-resizer="learning-run"
             role="separator"
             aria-label="Resize learning and run logs"
-            title="拖动调整 Learning goal 和运行日志宽度"
+            title="Drag to resize learning goal and run log width"
           ></div>
 
           <section class="log-panel run-log-panel resizable-panel" id="run-log-panel">
             <div class="panel-head">
-              <h2>运行日志</h2>
+              <h2>Run Log</h2>
               <button class="icon-button" id="reset-view" type="button" title="Reset view">
                 <i data-lucide="rotate-ccw"></i>
               </button>
@@ -210,12 +210,12 @@ app.innerHTML = `
             data-grid-resizer="run-rpc"
             role="separator"
             aria-label="Resize run and RPC logs"
-            title="拖动调整运行日志和 RPC 日志宽度"
+            title="Drag to resize run and RPC log width"
           ></div>
 
           <section class="log-panel rpc-log-panel resizable-panel" id="rpc-log-panel">
             <div class="panel-head">
-              <h2>RPC 日志</h2>
+              <h2>RPC Log</h2>
               <span class="log-cap" id="rpc-log-cap"></span>
             </div>
             <div class="logs" id="rpc-logs"></div>
@@ -248,7 +248,7 @@ app.innerHTML = `
         <div class="panel-head">
           <div>
             <p class="eyebrow">Reports</p>
-            <h2>历史 JSON 数据</h2>
+            <h2>History JSON Data</h2>
           </div>
           <button class="secondary-button compact-button" id="refresh-history" type="button">
             <i data-lucide="refresh-cw"></i>
@@ -257,8 +257,8 @@ app.innerHTML = `
         </div>
         <section class="history-trend-panel">
           <div class="duration-board-head">
-            <h3>历史耗时趋势</h3>
-            <span id="history-trend-caption">按生成时间对比每次运行总耗时</span>
+            <h3>History Duration Trend</h3>
+            <span id="history-trend-caption">Compare total duration of each run by generation time</span>
           </div>
           <div class="history-trend" id="history-trend"></div>
         </section>
@@ -266,7 +266,7 @@ app.innerHTML = `
           <div class="history-list" id="history-list"></div>
           <div class="history-json-panel">
             <div class="panel-head">
-              <h2>报告详情</h2>
+              <h2>Report Details</h2>
               <button class="icon-button" id="copy-history-json" type="button" title="Copy selected report JSON">
                 <i data-lucide="copy"></i>
               </button>
@@ -1028,7 +1028,7 @@ function renderReportState(state: FlowRunState): void {
 async function renderHistoryView(): Promise<void> {
   elements.historyList.innerHTML = `<div class="empty-log">Loading reports...</div>`;
   elements.historyTrend.innerHTML = `<div class="empty-log">Loading trend...</div>`;
-  elements.historyTrendCaption.textContent = "按生成时间对比每次运行总耗时";
+  elements.historyTrendCaption.textContent = "Compare total duration of each run by generation time";
   elements.historySummary.innerHTML = "";
   elements.historyJson.textContent = "{}";
 
@@ -1050,7 +1050,7 @@ async function renderHistoryView(): Promise<void> {
 
   if (!items.length) {
     elements.historyList.innerHTML = `<div class="empty-log">No history yet.</div>`;
-    elements.historyTrend.innerHTML = `<div class="empty-log">没有历史数据。</div>`;
+    elements.historyTrend.innerHTML = `<div class="empty-log">No history data.</div>`;
     return;
   }
 
@@ -1131,7 +1131,7 @@ function renderHistoryTrend(items: HistoryDisplayItem[]): string {
     .sort((left, right) => new Date(left.generatedAt).getTime() - new Date(right.generatedAt).getTime());
 
   if (!points.length) {
-    return `<div class="empty-log">没有可对比的耗时数据。</div>`;
+    return `<div class="empty-log">No comparable duration data.</div>`;
   }
 
   const width = 920;
@@ -1158,7 +1158,7 @@ function renderHistoryTrend(items: HistoryDisplayItem[]): string {
   });
 
   return `
-    <svg class="trend-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="历史运行总耗时折线图">
+    <svg class="trend-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Historical total run duration line chart">
       <g class="trend-grid">
         ${yTicks
           .map(
@@ -1189,9 +1189,9 @@ function renderHistoryTrend(items: HistoryDisplayItem[]): string {
       </g>
     </svg>
     <div class="trend-legend">
-      <span><i class="legend-dot ok"></i>成功</span>
-      <span><i class="legend-dot bad"></i>失败</span>
-      <span>${points.length} 次运行，最快 ${escapeHtml(formatDuration(minDuration))}，最慢 ${escapeHtml(formatDuration(maxDuration))}</span>
+      <span><i class="legend-dot ok"></i>Success</span>
+      <span><i class="legend-dot bad"></i>Failed</span>
+      <span>${points.length} runs, fastest ${escapeHtml(formatDuration(minDuration))}, slowest ${escapeHtml(formatDuration(maxDuration))}</span>
     </div>
   `;
 }
@@ -1199,12 +1199,12 @@ function renderHistoryTrend(items: HistoryDisplayItem[]): string {
 function renderHistoryTrendCaption(items: HistoryDisplayItem[]): string {
   const timedItems = items.filter((item) => item.entry.durationMs !== undefined);
   if (!timedItems.length) {
-    return "等待每天 CI 生成报告后展示趋势";
+    return "Waiting for daily CI to generate reports to show trends";
   }
   const latest = timedItems
     .map((item) => item.entry)
     .sort((left, right) => new Date(right.generatedAt).getTime() - new Date(left.generatedAt).getTime())[0];
-  return `最新一次 ${formatScenarioName(latest.scenario)}：${formatDuration(latest.durationMs)}`;
+  return `Latest ${formatScenarioName(latest.scenario)}: ${formatDuration(latest.durationMs)}`;
 }
 
 function renderTrendDateLabel(
@@ -1245,15 +1245,15 @@ function renderHistorySummary(reportPayload: unknown, fallback: ReportIndexEntry
       </div>
       <div class="history-stat-grid">
         <div>
-          <span>总耗时</span>
+          <span>Total duration</span>
           <strong>${escapeHtml(formatDuration(summary.durationMs))}</strong>
         </div>
         <div>
-          <span>已计时步骤</span>
+          <span>Timed steps</span>
           <strong>${completedSteps}/${steps.length || "--"}</strong>
         </div>
         <div>
-          <span>生成日期</span>
+          <span>Generated date</span>
           <strong>${escapeHtml(formatShortDate((report?.generatedAt ?? fallback.generatedAt)))}</strong>
         </div>
       </div>
@@ -1261,8 +1261,8 @@ function renderHistorySummary(reportPayload: unknown, fallback: ReportIndexEntry
     </section>
     <section class="duration-board">
       <div class="duration-board-head">
-        <h3>步骤耗时</h3>
-        <span>${steps.length ? "最长条表示最慢步骤" : "这份报告没有步骤详情"}</span>
+        <h3>Step Duration</h3>
+        <span>${steps.length ? "Longest bar represents the slowest step" : "This report has no step details"}</span>
       </div>
       <div class="duration-list">
         ${
@@ -1270,7 +1270,7 @@ function renderHistorySummary(reportPayload: unknown, fallback: ReportIndexEntry
             ? steps
                 .map((step) => renderStepDurationBar(step, longestStepMs))
                 .join("")
-            : `<div class="empty-log">没有步骤耗时数据。</div>`
+            : `<div class="empty-log">No step duration data.</div>`
         }
       </div>
     </section>
