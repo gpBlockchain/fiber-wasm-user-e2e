@@ -114,6 +114,13 @@ Configure this GitHub secret before expecting a successful funded run:
 
 - `CI_CKB_SECRET_KEY`
 
+Optional GitHub secret:
+
+- `DISCORD_WEBHOOK_URL`
+  Sends the daily scenario result to a Discord channel after the run finishes,
+  including success/failure, report commit status, report file path, and the
+  GitHub Actions run URL.
+
 If the funded key or peer is unavailable, the workflow still records the failed
 run as a report so the history page shows what broke.
 
