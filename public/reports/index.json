@@ -1,7 +1,19 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-05-16T03:11:49.141Z",
+  "updatedAt": "2026-05-17T03:17:21.329Z",
   "reports": [
+    {
+      "runId": "923f6081-e955-42df-b30d-573cefe49d1a",
+      "scenario": "testnet-single",
+      "status": "failed",
+      "startedAt": "2026-05-17T03:03:50.724Z",
+      "endedAt": "2026-05-17T03:17:21.181Z",
+      "durationMs": 810457,
+      "lastError": "Restart recovery did not restore peer and channel visibility before timeout.",
+      "generatedAt": "2026-05-17T03:17:21.244Z",
+      "source": "ci",
+      "file": "reports/2026-05-17T03-17-21-244Z-testnet-single-923f6081-e955-42df-b30d-573cefe49d1a.json"
+    },
     {
       "runId": "a87c1447-7e1c-4e55-a9ee-546ff9950785",
       "scenario": "testnet-single",
