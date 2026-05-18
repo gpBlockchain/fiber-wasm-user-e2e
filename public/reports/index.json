@@ -1,7 +1,18 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-05-17T03:17:21.329Z",
+  "updatedAt": "2026-05-18T03:14:01.605Z",
   "reports": [
+    {
+      "runId": "7ad81e8c-6452-430f-aed7-41494ca3a014",
+      "scenario": "testnet-single",
+      "status": "success",
+      "startedAt": "2026-05-18T03:04:39.906Z",
+      "endedAt": "2026-05-18T03:14:01.466Z",
+      "durationMs": 561560,
+      "generatedAt": "2026-05-18T03:14:01.526Z",
+      "source": "ci",
+      "file": "reports/2026-05-18T03-14-01-526Z-testnet-single-7ad81e8c-6452-430f-aed7-41494ca3a014.json"
+    },
     {
       "runId": "923f6081-e955-42df-b30d-573cefe49d1a",
       "scenario": "testnet-single",
