@@ -1,7 +1,19 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-06-23T03:16:25.504Z",
+  "updatedAt": "2026-06-24T03:15:25.128Z",
   "reports": [
+    {
+      "runId": "c6f85023-37d6-42cb-9245-9a551f7e1c12",
+      "scenario": "testnet-single",
+      "status": "failed",
+      "startedAt": "2026-06-24T03:03:54.062Z",
+      "endedAt": "2026-06-24T03:15:24.979Z",
+      "durationMs": 690917,
+      "lastError": "Dry-run payment kept failing before timeout. Last error: ErrorObject { code: ServerError(-32000), message: \"Send payment error: Failed to build route, PathFind error: no path found\", data: Some(RawValue({\"target_pubkey\":\"02b6d4e3ab86a2ca2fad6fae0ecb2e1e559e0b911939872a90abdda6d20302be71\",\"amount\":\"0x3e8\",\"payment_hash\":null,\"final_tlc_expiry_delta\":null,\"tlc_expiry_limit\":null,\"invoice\":null,\"timeout\":null,\"max_fee_amount\":null,\"max_fee_rate\":null,\"max_parts\":null,\"trampoline_hops\":null,\"keysend\":true,\"udt_type_script\":null,\"allow_self_payment\":null,\"custom_records\":null,\"hop_hints\":null,\"dry_run\":true})) }",
+      "generatedAt": "2026-06-24T03:15:25.030Z",
+      "source": "ci",
+      "file": "reports/2026-06-24T03-15-25-030Z-testnet-single-c6f85023-37d6-42cb-9245-9a551f7e1c12.json"
+    },
     {
       "runId": "3ac14955-0c58-4474-a8d3-965c5b8c7134",
       "scenario": "testnet-single",
