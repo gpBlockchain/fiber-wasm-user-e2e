@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-06-28T03:16:53.602Z",
+  "source": "ci",
+  "summary": {
+    "runId": "666e0ebd-9d04-4a13-85bf-9149e7175afb",
+    "scenario": "testnet-single",
+    "status": "failed",
+    "startedAt": "2026-06-28T03:04:22.857Z",
+    "endedAt": "2026-06-28T03:16:53.552Z",
+    "durationMs": 750695,
+    "lastError": "Dry-run payment kept failing before timeout. Last error: ErrorObject { code: ServerError(-32000), message: \"Send payment error: Failed to build route, PathFind error: no path found\", data: Some(RawValue({\"target_pubkey\":\"02b6d4e3ab86a2ca2fad6fae0ecb2e1e559e0b911939872a90abdda6d20302be71\",\"amount\":\"0x3e8\",\"payment_hash\":null,\"final_tlc_expiry_delta\":null,\"tlc_expiry_limit\":null,\"invoice\":null,\"timeout\":null,\"max_fee_amount\":null,\"max_fee_rate\":null,\"max_parts\":null,\"trampoline_hops\":null,\"keysend\":true,\"udt_type_script\":null,\"allow_self_payment\":null,\"custom_records\":null,\"hop_hints\":null,\"dry_run\":true})) }"
+  },
+  "steps": [
+    {
+      "id": "start",
+      "label": "Start WASM Fiber",
+      "status": "success",
+      "startedAt": "2026-06-28T03:04:22.871Z",
+      "endedAt": "2026-06-28T03:04:25.257Z",
+      "durationMs": 2386,
+      "durationSeconds": 2.386
+    },
+    {
+      "id": "node-info",
+      "label": "node_info",
+      "status": "success",
+      "startedAt": "2026-06-28T03:04:25.261Z",
+      "endedAt": "2026-06-28T03:04:25.281Z",
+      "durationMs": 20,
+      "durationSeconds": 0.02
+    },
+    {
+      "id": "graph-channels",
+      "label": "graph_channels",
+      "status": "success",
+      "startedAt": "2026-06-28T03:04:25.287Z",
+      "endedAt": "2026-06-28T03:04:25.322Z",
+      "durationMs": 35,
+      "durationSeconds": 0.035
+    },
+    {
+      "id": "connect-peer",
+      "label": "connect_peer",
+      "status": "success",
+      "startedAt": "2026-06-28T03:04:25.334Z",
+      "endedAt": "2026-06-28T03:05:07.617Z",
+      "durationMs": 42283,
+      "durationSeconds": 42.283
+    },
+    {
+      "id": "open-channel",
+      "label": "open_channel",
+      "status": "success",
+      "startedAt": "2026-06-28T03:05:07.701Z",
+      "endedAt": "2026-06-28T03:05:07.798Z",
+      "durationMs": 97,
+      "durationSeconds": 0.097
+    },
+    {
+      "id": "channel-ready",
+      "label": "Wait ChannelReady",
+      "status": "success",
+      "startedAt": "2026-06-28T03:05:07.826Z",
+      "endedAt": "2026-06-28T03:06:51.552Z",
+      "durationMs": 103726,
+      "durationSeconds": 103.726
+    },
+    {
+      "id": "graph-sync",
+      "label": "Wait graph sync",
+      "status": "success",
+      "startedAt": "2026-06-28T03:06:51.621Z",
+      "endedAt": "2026-06-28T03:06:52.288Z",
+      "durationMs": 667,
+      "durationSeconds": 0.667
+    },
+    {
+      "id": "send-payment",
+      "label": "send_payment",
+      "status": "failed",
+      "startedAt": "2026-06-28T03:06:52.361Z",
+      "endedAt": "2026-06-28T03:16:53.522Z",
+      "durationMs": 601161,
+      "durationSeconds": 601.161
+    },
+    {
+      "id": "stop",
+      "label": "Stop Fiber",
+      "status": "skipped"
+    },
+    {
+      "id": "restart",
+      "label": "Restart Fiber",
+      "status": "skipped"
+    },
+    {
+      "id": "restart-recovery",
+      "label": "Recover peers/channels",
+      "status": "skipped"
+    },
+    {
+      "id": "restart-payment",
+      "label": "Send payment after restart",
+      "status": "skipped"
+    },
+    {
+      "id": "shutdown",
+      "label": "shutdown_channel",
+      "status": "skipped"
+    }
+  ]
+}
