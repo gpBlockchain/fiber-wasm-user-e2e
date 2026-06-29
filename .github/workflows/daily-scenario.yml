@@ -49,71 +49,27 @@ jobs:
           git commit -m "Add daily Fiber WASM scenario report"
           git push
 
-      - name: Notify Discord
-        if: ${{ always() }}
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          RUN_SCENARIO_OUTCOME: ${{ steps.run_scenario.outcome }}
-          COMMIT_REPORT_OUTCOME: ${{ steps.commit_report.outcome }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          REPOSITORY: ${{ github.repository }}
-          BRANCH: ${{ github.ref_name }}
-        run: |
-          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
-            echo "DISCORD_WEBHOOK_URL is not configured; skipping Discord notification."
-            exit 0
-          fi
+  notify-discord:
+    runs-on: ubuntu-22.04
+    needs: run-scenario
+    if: always()
+    steps:
+      - name: Notify Discord on success
+        if: needs.run-scenario.result == 'success'
+        continue-on-error: true
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          title: "Daily Fiber WASM Scenario Succeeded"
+          description: "Successfully ran the daily Fiber WASM scenario and updated reports on ${{ github.ref_name }}. Triggered by ${{ github.actor }}."
+          color: 0x00ff00
 
-          REPORT_FILE="$(git ls-files --others --modified --exclude-standard public/reports/*.json | grep -v 'public/reports/index.json' | head -n 1 || true)"
-          if [ -z "$REPORT_FILE" ]; then
-            REPORT_FILE="$(git log -1 --name-only --pretty='' -- public/reports | grep '^public/reports/.*\.json$' | grep -v 'public/reports/index.json' | head -n 1 || true)"
-          fi
-          export REPORT_FILE
-
-          node <<'NODE' > /tmp/discord-payload.json
-          const fs = require("fs");
-
-          const scenarioOutcome = process.env.RUN_SCENARIO_OUTCOME || "skipped";
-          const commitOutcome = process.env.COMMIT_REPORT_OUTCOME || "skipped";
-          const reportFile = process.env.REPORT_FILE || "";
-          const report = reportFile && fs.existsSync(reportFile)
-            ? JSON.parse(fs.readFileSync(reportFile, "utf8"))
-            : undefined;
-          const reportStatus = report?.summary?.status || scenarioOutcome;
-          const reportDurationMs = report?.summary?.durationMs;
-          const ok = reportStatus === "success" && (commitOutcome === "success" || commitOutcome === "skipped");
-          const color = ok ? 0x1f6d55 : 0xb33a2d;
-          const status = ok ? "Daily Fiber WASM scenario succeeded" : "Daily Fiber WASM scenario needs attention";
-          const reportFileLabel = reportFile || "No report file detected";
-          const duration = reportDurationMs === undefined
-            ? "unknown"
-            : `${Math.round(reportDurationMs / 1000)}s`;
-
-          const payload = {
-            username: "Fiber WASM CI",
-            embeds: [
-              {
-                title: status,
-                url: process.env.RUN_URL,
-                color,
-                fields: [
-                  { name: "Repository", value: process.env.REPOSITORY, inline: true },
-                  { name: "Branch", value: process.env.BRANCH, inline: true },
-                  { name: "Scenario", value: reportStatus, inline: true },
-                  { name: "Duration", value: duration, inline: true },
-                  { name: "Commit report", value: commitOutcome, inline: true },
-                  { name: "Report", value: reportFileLabel, inline: false },
-                  { name: "Run", value: process.env.RUN_URL, inline: false }
-                ],
-                timestamp: new Date().toISOString()
-              }
-            ]
-          };
-
-          fs.writeFileSync("/tmp/discord-payload.json", JSON.stringify(payload));
-          NODE
-
-          curl -fsS \
-            -H "Content-Type: application/json" \
-            -d @/tmp/discord-payload.json \
-            "$DISCORD_WEBHOOK_URL"
+      - name: Notify Discord on failure
+        if: needs.run-scenario.result != 'success'
+        continue-on-error: true
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          title: "Daily Fiber WASM Scenario Failed"
+          description: "Daily Fiber WASM scenario failed or report update did not complete. Check run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}."
+          color: 0xff0000
