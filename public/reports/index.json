@@ -1,7 +1,19 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-06-29T02:44:01.380Z",
+  "updatedAt": "2026-06-29T06:27:57.095Z",
   "reports": [
+    {
+      "runId": "7b871cce-282f-4687-8778-67b718714a3d",
+      "scenario": "testnet-single",
+      "status": "failed",
+      "startedAt": "2026-06-29T06:22:38.648Z",
+      "endedAt": "2026-06-29T06:27:56.977Z",
+      "durationMs": 318329,
+      "lastError": "connect_peer by pubkey returned, but peer 0291a6576bd5a94bd74b27080a48340875338fff9f6d6361fe6b8db8d0d1912fcc did not appear in list_peers before timeout. Last error: ErrorObject { code: ServerError(-32000), message: \"Peer not found error: Pubkey(0291a6576bd5a94bd74b27080a48340875338fff9f6d6361fe6b8db8d0d1912fcc)\", data: None }",
+      "generatedAt": "2026-06-29T06:27:57.015Z",
+      "source": "ci",
+      "file": "reports/2026-06-29T06-27-57-015Z-testnet-single-7b871cce-282f-4687-8778-67b718714a3d.json"
+    },
     {
       "runId": "489a15d3-b2b6-41d8-a242-874f94280777",
       "scenario": "testnet-single",
