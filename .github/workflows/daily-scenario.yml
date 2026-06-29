@@ -71,6 +71,7 @@ jobs:
         uses: sarisia/actions-status-discord@v1
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          content: "<@802020984097734656>"
           title: "Daily Fiber WASM Scenario Failed"
           description: "Daily Fiber WASM scenario failed or report update did not complete. Check run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}."
           color: 0xff0000
