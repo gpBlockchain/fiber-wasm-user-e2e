@@ -48,6 +48,14 @@ try {
   await updateReportIndex(report, `reports/${fileName}`);
 
   console.log(`Wrote ${path.relative(rootDir, filePath)}`);
+  if (report.summary?.status !== "success") {
+    console.error(
+      `Scenario completed with status ${report.summary?.status ?? "unknown"}: ${
+        report.summary?.lastError ?? "no error detail recorded"
+      }`
+    );
+    process.exitCode = 1;
+  }
 } finally {
   await browser?.close();
   await viteServer?.close();
