@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-06-29T14:23:00.190Z",
+  "source": "ci",
+  "summary": {
+    "runId": "26769c07-be48-4afc-bc46-dad4b2608236",
+    "scenario": "testnet-single",
+    "status": "failed",
+    "startedAt": "2026-06-29T14:17:57.554Z",
+    "endedAt": "2026-06-29T14:23:00.153Z",
+    "durationMs": 302599,
+    "lastError": "connect_peer by pubkey returned, but peer 0291a6576bd5a94bd74b27080a48340875338fff9f6d6361fe6b8db8d0d1912fcc did not appear in list_peers before timeout. Last error: ErrorObject { code: ServerError(-32000), message: \"Peer not found error: Pubkey(0291a6576bd5a94bd74b27080a48340875338fff9f6d6361fe6b8db8d0d1912fcc)\", data: None }"
+  },
+  "steps": [
+    {
+      "id": "start",
+      "label": "Start WASM Fiber",
+      "status": "success",
+      "startedAt": "2026-06-29T14:17:57.567Z",
+      "endedAt": "2026-06-29T14:17:59.694Z",
+      "durationMs": 2127,
+      "durationSeconds": 2.127
+    },
+    {
+      "id": "node-info",
+      "label": "node_info",
+      "status": "success",
+      "startedAt": "2026-06-29T14:17:59.701Z",
+      "endedAt": "2026-06-29T14:17:59.726Z",
+      "durationMs": 25,
+      "durationSeconds": 0.025
+    },
+    {
+      "id": "graph-channels",
+      "label": "graph_channels",
+      "status": "success",
+      "startedAt": "2026-06-29T14:17:59.737Z",
+      "endedAt": "2026-06-29T14:17:59.762Z",
+      "durationMs": 25,
+      "durationSeconds": 0.025
+    },
+    {
+      "id": "connect-peer",
+      "label": "connect_peer",
+      "status": "failed",
+      "startedAt": "2026-06-29T14:17:59.771Z",
+      "endedAt": "2026-06-29T14:23:00.130Z",
+      "durationMs": 300359,
+      "durationSeconds": 300.359
+    },
+    {
+      "id": "open-channel",
+      "label": "open_channel",
+      "status": "skipped"
+    },
+    {
+      "id": "channel-ready",
+      "label": "Wait ChannelReady",
+      "status": "skipped"
+    },
+    {
+      "id": "graph-sync",
+      "label": "Wait graph sync",
+      "status": "skipped"
+    },
+    {
+      "id": "send-payment",
+      "label": "send_payment",
+      "status": "skipped"
+    },
+    {
+      "id": "stop",
+      "label": "Stop Fiber",
+      "status": "skipped"
+    },
+    {
+      "id": "restart",
+      "label": "Restart Fiber",
+      "status": "skipped"
+    },
+    {
+      "id": "restart-recovery",
+      "label": "Recover peers/channels",
+      "status": "skipped"
+    },
+    {
+      "id": "restart-payment",
+      "label": "Send payment after restart",
+      "status": "skipped"
+    },
+    {
+      "id": "shutdown",
+      "label": "shutdown_channel",
+      "status": "skipped"
+    }
+  ]
+}
