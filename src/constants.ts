@@ -77,6 +77,7 @@ export const DEFAULT_FORM_VALUES = {
   testnetDatabasePrefix: `testnet-single-${new Date().toISOString().slice(0, 10)}`,
   localDatabasePrefix: `local-multi-node-${new Date().toISOString().slice(0, 10)}`,
   testnetPeerPubkey: "0291a6576bd5a94bd74b27080a48340875338fff9f6d6361fe6b8db8d0d1912fcc",
+  testnetPeerAddress: "/dns4/bracer.fiber.channel/tcp/443/wss/p2p/QmbKyzq9qUmymW2Gi8Zq7kKVpPiNA1XUJ6uMvsUC4F3p89",
   testnetPaymentTargetPubkey: "02b6d4e3ab86a2ca2fad6fae0ecb2e1e559e0b911939872a90abdda6d20302be71",
   fundingAmount: "100000000000",
   paymentAmount: "1000",

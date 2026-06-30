@@ -7,6 +7,7 @@ import {
   MAX_RPC_LOGS
 } from "./constants";
 import { FiberClient } from "./fiberClient";
+import { selectPeerConnectionTarget } from "./peerConnection";
 import type { FlowCallbacks, FlowConfig, FlowRunState, FlowStep, RpcLog, StepId } from "./types";
 
 export class FlowRunner {
@@ -411,7 +412,35 @@ export class FlowRunner {
   }
 
   private async connectPeerAndWait(config: FlowConfig): Promise<Record<string, unknown>> {
-    return this.connectPeerByPubkeyUntilConnected(this.client, config.peerPubkey, config);
+    const target = selectPeerConnectionTarget(config);
+    if (target.mode === "address") {
+      return this.connectPeerByAddressUntilConnected(
+        this.client,
+        target.address,
+        target.expectedPubkey,
+        config
+      );
+    }
+
+    return this.connectPeerByPubkeyUntilConnected(this.client, target.pubkey, config);
+  }
+
+  private async connectPeerByAddressUntilConnected(
+    client: FiberClient,
+    address: string,
+    expectedPubkey: string,
+    config: FlowConfig
+  ): Promise<Record<string, unknown>> {
+    return poll(
+      async () => {
+        await client.connectPeer(address);
+        const peers = await client.listPeers();
+        return peers.peers.find((peer) => peer.pubkey === expectedPubkey);
+      },
+      config.connectPeerTimeoutMs,
+      config.pollIntervalMs,
+      `connect_peer by address returned, but peer ${expectedPubkey} did not appear in list_peers before timeout.`
+    );
   }
 
   private async connectPeerByPubkeyUntilConnected(

@@ -116,6 +116,11 @@ app.innerHTML = `
           </label>
 
           <label data-scenario-field="testnet-single">
+            Peer address
+            <input id="peer-address" autocomplete="off" spellcheck="false" placeholder="/ip4/.../tcp/.../ws/p2p/..." />
+          </label>
+
+          <label data-scenario-field="testnet-single">
             Funding amount (shannon)
             <input id="funding-amount" inputmode="numeric" />
           </label>
@@ -297,6 +302,7 @@ const elements = {
   databasePrefix: byId<HTMLInputElement>("database-prefix"),
   deleteIndexedDb: byId<HTMLButtonElement>("delete-indexeddb"),
   peerPubkey: byId<HTMLInputElement>("peer-pubkey"),
+  peerAddress: byId<HTMLInputElement>("peer-address"),
   fundingAmount: byId<HTMLInputElement>("funding-amount"),
   paymentTargetPubkey: byId<HTMLInputElement>("payment-target-pubkey"),
   paymentAmount: byId<HTMLInputElement>("payment-amount"),
@@ -337,6 +343,7 @@ type ScenarioDraft = {
   ckbSecretKey: string;
   databasePrefix: string;
   peerPubkey: string;
+  peerAddress: string;
   fundingAmount: string;
   paymentTargetPubkey: string;
   paymentAmount: string;
@@ -475,6 +482,7 @@ function hydrateDefaults(): void {
 
 function readConfig(): FlowConfig {
   const peerPubkey = elements.peerPubkey.value.trim();
+  const peerAddress = elements.peerAddress.value.trim();
   const paymentTargetPubkey = elements.paymentTargetPubkey.value.trim() || peerPubkey;
   const scenario = elements.scenario.value as FlowConfig["scenario"];
   const localNodeCount = Number.parseInt(elements.localNodeCount.value, 10) || DEFAULT_FORM_VALUES.localNodeCount;
@@ -496,6 +504,7 @@ function readConfig(): FlowConfig {
       scenarioDrafts[scenario].databasePrefix ||
       DEFAULT_FORM_VALUES.testnetDatabasePrefix,
     peerPubkey,
+    peerAddress,
     fundingAmount: elements.fundingAmount.value.trim(),
     paymentTargetPubkey,
     paymentAmount: elements.paymentAmount.value.trim(),
@@ -523,6 +532,7 @@ function createScenarioDraft(scenario: FlowScenario): ScenarioDraft {
     ckbSecretKey: randomSecretKeyHex(),
     databasePrefix,
     peerPubkey: scenario === "testnet-single" ? DEFAULT_FORM_VALUES.testnetPeerPubkey : "",
+    peerAddress: scenario === "testnet-single" ? DEFAULT_FORM_VALUES.testnetPeerAddress : "",
     fundingAmount: DEFAULT_FORM_VALUES.fundingAmount,
     paymentTargetPubkey:
       scenario === "testnet-single" ? DEFAULT_FORM_VALUES.testnetPaymentTargetPubkey : "",
@@ -544,6 +554,7 @@ function saveScenarioDraft(scenario: FlowScenario): void {
     ckbSecretKey: elements.ckbSecretKey.value,
     databasePrefix: elements.databasePrefix.value,
     peerPubkey: elements.peerPubkey.value,
+    peerAddress: elements.peerAddress.value,
     fundingAmount: elements.fundingAmount.value,
     paymentTargetPubkey: elements.paymentTargetPubkey.value,
     paymentAmount: elements.paymentAmount.value,
@@ -561,6 +572,7 @@ function loadScenarioDraft(scenario: FlowScenario): void {
   elements.ckbSecretKey.value = draft.ckbSecretKey;
   elements.databasePrefix.value = draft.databasePrefix;
   elements.peerPubkey.value = draft.peerPubkey;
+  elements.peerAddress.value = draft.peerAddress;
   elements.fundingAmount.value = draft.fundingAmount;
   elements.paymentTargetPubkey.value = draft.paymentTargetPubkey;
   elements.paymentAmount.value = draft.paymentAmount;

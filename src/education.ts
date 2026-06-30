@@ -55,9 +55,9 @@ export const STEP_LESSONS: Record<StepId, StepLesson> = {
   "connect-peer": {
     concept: "Peer connection",
     rpc:
-      "Call connect_peer with [{ pubkey, save: true }], then poll list_peers [] until peers contains that pubkey.",
+      "If Peer address is filled, call connect_peer with [{ address, save: true }]; otherwise call connect_peer with [{ pubkey, save: true }]. Then poll list_peers [] until peers contains the pubkey.",
     meaning:
-      "Connects to the configured remote Fiber pubkey. Channels and payments require a live peer session first.",
+      "Connects to the configured remote Fiber peer. Channels and payments still use the peer pubkey after the session is live.",
     observe: "Failures here usually point to wrong pubkey, unreachable peer, transport, or bootnode issues."
   },
   "open-channel": {

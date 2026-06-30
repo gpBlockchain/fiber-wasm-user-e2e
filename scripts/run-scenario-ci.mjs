@@ -67,6 +67,7 @@ async function applyEnvironmentConfig(page) {
   const defaults = {
     "#database-prefix": `ci-${scenario}-${today}-${runSuffix}`,
     "#peer-pubkey": process.env.CI_PEER_PUBKEY,
+    "#peer-address": process.env.CI_PEER_ADDRESS,
     "#payment-target-pubkey": process.env.CI_PAYMENT_TARGET_PUBKEY,
     "#fiber-secret-key": process.env.CI_FIBER_SECRET_KEY,
     "#ckb-secret-key": process.env.CI_CKB_SECRET_KEY,

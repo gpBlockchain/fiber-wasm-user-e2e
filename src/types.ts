@@ -49,6 +49,7 @@ export interface FlowConfig {
   ckbSecretKeyHex: string;
   databasePrefix: string;
   peerPubkey: string;
+  peerAddress: string;
   fundingAmount: string;
   paymentTargetPubkey: string;
   paymentAmount: string;
