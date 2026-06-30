@@ -1,7 +1,19 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-06-30T03:08:53.031Z",
+  "updatedAt": "2026-06-30T09:05:49.457Z",
   "reports": [
+    {
+      "runId": "d0e95ff5-6bd0-40b4-b896-3582dbdb4f1b",
+      "scenario": "testnet-single",
+      "status": "failed",
+      "startedAt": "2026-06-30T08:54:44.985Z",
+      "endedAt": "2026-06-30T09:05:49.327Z",
+      "durationMs": 664342,
+      "lastError": "Dry-run payment kept failing before timeout. Last error: ErrorObject { code: ServerError(-32000), message: \"Send payment error: Failed to build route, PathFind error: no path found\", data: None }",
+      "generatedAt": "2026-06-30T09:05:49.370Z",
+      "source": "ci",
+      "file": "reports/2026-06-30T09-05-49-370Z-testnet-single-d0e95ff5-6bd0-40b4-b896-3582dbdb4f1b.json"
+    },
     {
       "runId": "6e6578b1-f979-4229-96b5-df4318985e5e",
       "scenario": "testnet-single",
