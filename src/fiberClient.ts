@@ -1,8 +1,8 @@
 import { Fiber } from "@nervosnetwork/fiber-js";
+import { createKeysendPaymentParams, toRpcHex, type RpcHex } from "./paymentParams";
 import type { FlowConfig, LogLevel, RpcLog } from "./types";
 
 type FiberInstance = InstanceType<typeof Fiber>;
-type RpcHex = `0x${string}`;
 
 export class FiberClient {
   private fiber: FiberInstance | null = null;
@@ -74,27 +74,30 @@ export class FiberClient {
     };
   }
 
+  async graphNodes(): Promise<{ nodes: Array<Record<string, unknown>> }> {
+    return (await this.invokeLogged("graph_nodes", [{ limit: "0xffff" }])) as unknown as {
+      nodes: Array<Record<string, unknown>>;
+    };
+  }
+
   async sendPayment(
     targetPubkey: string,
-    amount: string
+    amount: string,
+    timeoutMs: number
   ): Promise<Record<string, unknown>> {
-    return (await this.invokeLogged("send_payment", [{
-      target_pubkey: targetPubkey,
-      amount: toRpcHex(amount),
-      keysend: true
-    }])) as unknown as Record<string, unknown>;
+    return (await this.invokeLogged("send_payment", [
+      createKeysendPaymentParams(targetPubkey, amount, timeoutMs)
+    ])) as unknown as Record<string, unknown>;
   }
 
   async dryRunPayment(
     targetPubkey: string,
-    amount: string
+    amount: string,
+    timeoutMs: number
   ): Promise<Record<string, unknown>> {
-    return (await this.invokeLogged("send_payment", [{
-      target_pubkey: targetPubkey,
-      amount: toRpcHex(amount),
-      keysend: true,
-      dry_run: true
-    }])) as unknown as Record<string, unknown>;
+    return (await this.invokeLogged("send_payment", [
+      createKeysendPaymentParams(targetPubkey, amount, timeoutMs, true)
+    ])) as unknown as Record<string, unknown>;
   }
 
   async getPayment(paymentHash: string): Promise<Record<string, unknown>> {
@@ -166,19 +169,6 @@ export function randomSecretKeyHex(): string {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
   return bytesToHex(bytes);
-}
-
-export function toRpcHex(value: string): RpcHex {
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return "0x0";
-  }
-
-  if (trimmed.startsWith("0x")) {
-    return trimmed as RpcHex;
-  }
-
-  return `0x${BigInt(trimmed).toString(16)}`;
 }
 
 function hexToBytes(value: string): Uint8Array {

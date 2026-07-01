@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit",
     "test": "node scripts/test-peer-connection-target.mjs",
     "preview": "vite preview --host 0.0.0.0",
-    "ci:scenario": "node scripts/run-scenario-ci.mjs"
+    "ci:scenario": "node scripts/run-scenario-ci.mjs",
+    "fiber-js:local": "bash scripts/use-local-fiber-js.sh",
+    "fiber-js:restore": "bash scripts/use-local-fiber-js.sh --restore"
   },
   "dependencies": {
     "@ckb-ccc/core": "^1.12.5",

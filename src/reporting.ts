@@ -1,4 +1,4 @@
-import type { FlowRunState, FlowScenario } from "./types";
+import type { FlowMetrics, FlowRunState, FlowScenario } from "./types";
 
 export const LOCAL_REPORT_HISTORY_KEY = "fiber-wasm-report-history";
 export const MAX_LOCAL_REPORTS = 40;
@@ -32,6 +32,7 @@ export interface FlowReport {
   generatedAt: string;
   source: ReportSource;
   summary: FlowReportSummary;
+  metrics: FlowMetrics;
   steps: FlowStepDuration[];
 }
 
@@ -53,6 +54,7 @@ export function createFlowReport(state: FlowRunState, source: ReportSource): Flo
     generatedAt: new Date().toISOString(),
     source,
     summary: summarizeFlowState(state),
+    metrics: state.metrics,
     steps: state.steps.map((step) => ({
       id: step.id,
       label: step.label,

@@ -75,6 +75,7 @@ export const DEFAULT_LOCAL_MULTI_NODE_CONFIG = DEFAULT_TESTNET_CONFIG.replace(
 
 export const DEFAULT_FORM_VALUES = {
   testnetDatabasePrefix: `testnet-single-${new Date().toISOString().slice(0, 10)}`,
+  testnetGraphSyncRateDatabasePrefix: `testnet-graph-sync-rate-${new Date().toISOString().slice(0, 10)}`,
   localDatabasePrefix: `local-multi-node-${new Date().toISOString().slice(0, 10)}`,
   testnetPeerPubkey: "0291a6576bd5a94bd74b27080a48340875338fff9f6d6361fe6b8db8d0d1912fcc",
   testnetPeerAddress: "/dns4/bracer.fiber.channel/tcp/443/wss/p2p/QmbKyzq9qUmymW2Gi8Zq7kKVpPiNA1XUJ6uMvsUC4F3p89",
@@ -85,8 +86,10 @@ export const DEFAULT_FORM_VALUES = {
   connectPeerTimeoutMs: 5 * 60 * 1000,
   channelReadyTimeoutMs: 15 * 60 * 1000,
   graphSyncTimeoutMs: 15 * 60 * 1000,
-  paymentTimeoutMs: 10 * 60 * 1000,
+  paymentTimeoutMs: 60 * 60 * 1000,
   restartRecoveryTimeoutMs: 5 * 60 * 1000,
+  graphSyncRateDurationSeconds: 10 * 60,
+  graphSyncRateSampleSeconds: 30,
   localNodeCount: 2
 };
 
@@ -127,13 +130,29 @@ export const LOCAL_MULTI_NODE_STEP_DEFINITIONS = [
   ["local-shutdown", "Shutdown local nodes"]
 ] as const;
 
-export const FLOW_STEP_DEFINITIONS = [
-  ...TESTNET_FLOW_STEP_DEFINITIONS,
-  ...LOCAL_MULTI_NODE_STEP_DEFINITIONS
+export const TESTNET_GRAPH_SYNC_RATE_STEP_DEFINITIONS = [
+  ["start", "Start WASM Fiber"],
+  ["node-info", "node_info"],
+  ["graph-sync-rate", "Sample graph sync rate"],
+  ["stop", "Stop Fiber"]
 ] as const;
 
-export function getFlowStepDefinitions(scenario: "testnet-single" | "local-multi-node") {
-  return scenario === "local-multi-node"
-    ? LOCAL_MULTI_NODE_STEP_DEFINITIONS
-    : TESTNET_FLOW_STEP_DEFINITIONS;
+export const FLOW_STEP_DEFINITIONS = [
+  ...TESTNET_FLOW_STEP_DEFINITIONS,
+  ...LOCAL_MULTI_NODE_STEP_DEFINITIONS,
+  ...TESTNET_GRAPH_SYNC_RATE_STEP_DEFINITIONS
+] as const;
+
+export function getFlowStepDefinitions(
+  scenario: "testnet-single" | "local-multi-node" | "testnet-graph-sync-rate"
+) {
+  if (scenario === "local-multi-node") {
+    return LOCAL_MULTI_NODE_STEP_DEFINITIONS;
+  }
+
+  if (scenario === "testnet-graph-sync-rate") {
+    return TESTNET_GRAPH_SYNC_RATE_STEP_DEFINITIONS;
+  }
+
+  return TESTNET_FLOW_STEP_DEFINITIONS;
 }

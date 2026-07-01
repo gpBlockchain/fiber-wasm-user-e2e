@@ -696,6 +696,164 @@ textarea:focus {
   padding: 12px;
 }
 
+.graph-sync-chart-card {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #d5ddd7;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 249, 246, 0.96)),
+    #fbfcfa;
+}
+
+.graph-sync-chart-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.graph-sync-chart-head > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.graph-sync-chart-head span,
+.chart-legend {
+  color: #65736b;
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.graph-sync-chart-head strong {
+  color: #1f2b24;
+  font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 18px;
+}
+
+.chart-series-controls,
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px 12px;
+}
+
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-series-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 1px solid #d6dfd9;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  user-select: none;
+}
+
+.chart-series-toggle:has(input:not(:checked)) {
+  opacity: 0.52;
+}
+
+.chart-series-toggle input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: #176d55;
+}
+
+.chart-series-toggle.nodes input {
+  accent-color: #b85b2b;
+}
+
+.chart-series-toggle.peers input {
+  accent-color: #3d6fb6;
+}
+
+.chart-series-toggle span {
+  color: #3f4b43;
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.legend-line {
+  display: inline-block;
+  width: 20px;
+  height: 3px;
+  border-radius: 99px;
+}
+
+.legend-line.channels {
+  background: #176d55;
+}
+
+.legend-line.nodes {
+  background: #b85b2b;
+}
+
+.legend-line.peers {
+  background: #3d6fb6;
+}
+
+.graph-sync-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 180px;
+}
+
+.graph-sync-grid line {
+  stroke: #dfe7e1;
+  stroke-width: 1;
+}
+
+.graph-sync-grid text,
+.graph-sync-axis text {
+  fill: #65736b;
+  font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 11px;
+}
+
+.graph-sync-line {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.graph-sync-line.channels {
+  stroke: #176d55;
+}
+
+.graph-sync-line.nodes {
+  stroke: #b85b2b;
+}
+
+.graph-sync-line.peers {
+  stroke: #3d6fb6;
+}
+
+.graph-sync-chart-empty {
+  display: grid;
+  min-height: 154px;
+  place-items: center;
+  border: 1px dashed #cfd8d2;
+  border-radius: 8px;
+  color: #65736b;
+  font-size: 13px;
+  text-align: center;
+}
+
 .metric-tile {
   display: grid;
   gap: 4px;

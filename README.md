@@ -29,6 +29,15 @@ Each step records status, timestamps, duration, result payload, and error
 details. The raw JSON export at the bottom of the page can be copied into a
 report or issue.
 
+`Testnet graph sync rate` measures graph gossip learning without opening a
+channel:
+
+1. Start a WASM Fiber node in the browser.
+2. Run `node_info`.
+3. Repeatedly sample `graph_channels`, `graph_nodes`, and `list_peers`.
+4. Report initial counts, final counts, deltas, per-minute rates, and samples.
+5. Stop the WASM node without deleting IndexedDB state.
+
 `Local multi-node` is a separate scenario with its own multi-node flow:
 
 1. Start N browser-side WASM Fiber nodes.
@@ -57,8 +66,8 @@ primary detail view.
 
 - Node.js 18+
 - Chrome or Chromium
-- A testnet CKB key with enough balance to fund a Fiber channel
-- A reachable external Fiber testnet peer pubkey
+- A testnet CKB key with enough balance when running channel-opening scenarios
+- A reachable external Fiber testnet peer pubkey when running channel-opening scenarios
 
 The app requires `SharedArrayBuffer`, so it must be served with:
 
@@ -72,6 +81,28 @@ The included Vite config sets these headers for both `dev` and `preview`.
 ```bash
 cd fiber-wasm-testnet-demo
 npm install
+```
+
+## Test a Local fiber-js Build
+
+The normal dependency is `@nervosnetwork/fiber-js@0.9.0-rc5`. To test a local
+Fiber branch build, run:
+
+```bash
+FIBER_REPO=https://github.com/nervosnetwork/fiber.git \
+FIBER_BRANCH=fix/wasm-ckb-rpc-timeout \
+npm run fiber-js:local
+```
+
+The script clones or reuses `./fiber`, checks out the requested branch, runs
+`npm install`, installs `wasm-pack` when it is missing, runs `npm run build -ws`,
+verifies `fiber-js/dist/index.js`, and then installs
+`@nervosnetwork/fiber-js` from `file:./fiber/fiber-js` for this app.
+
+When local testing is finished, restore the published dependency with:
+
+```bash
+npm run fiber-js:restore
 ```
 
 ## Run
@@ -93,8 +124,9 @@ npm run build
 ## Reports and History
 
 When a flow reaches `Finished` or `Failed`, the page generates a structured
-report JSON. The report is intentionally small: it includes run metadata and the
-time spent by each step, without RPC logs or large result payloads.
+report JSON. The report is intentionally small: it includes run metadata,
+metrics, and the time spent by each step, without RPC logs or large result
+payloads.
 
 - Use the JSON button in the `Raw JSON` panel to download the latest report.
 - Open `?view=history` or the `History` tab to inspect previous reports.
@@ -142,18 +174,23 @@ run as a report so the history page shows what broke.
   IndexedDB` to remove databases matching the current prefix.
 - `Peer pubkey`
   Remote Fiber node pubkey used for `connect_peer`, `open_channel`, and restart
-  recovery checks.
+  recovery checks in the `Testnet single node` scenario.
 - `Funding amount`
   Channel funding amount in shannons.
 - `Payment target pubkey`
   Keysend target. If empty, the app uses `Peer pubkey`.
 - `Payment amount`
   Keysend amount in shannons.
+- `Graph sample minutes`
+  Duration for the `Testnet graph sync rate` sampler.
+- `Graph sample interval (seconds)`
+  Delay between `graph_channels`, `graph_nodes`, and `list_peers` samples in
+  the graph sync rate scenario.
 - `Scenario`
-  `Testnet single node` and `Local multi-node` use different step lists,
-  validations, metric cards, and form/config presets. Switching scenarios
-  preserves each scenario's in-progress draft so single-node values do not
-  bleed into local multi-node runs.
+  `Testnet single node`, `Testnet graph sync rate`, and `Local multi-node` use
+  different step lists, validations, metric cards, and form/config presets.
+  Switching scenarios preserves each scenario's in-progress draft so values do
+  not bleed across runs.
 - `Local node count`
   Number of local WASM nodes used by the local multi-node scenario.
 - `Local nodes JSON`
@@ -216,6 +253,10 @@ Example `Local nodes JSON`:
   `Local multi-node`, this applies to every node's `ckbSecretKeyHex`.
 - `ChannelReady timeout`
   The funding transaction may be slow, rejected, or waiting on the remote peer.
+- Flat graph sync rates
+  If channel, node, and peer deltas stay at zero, the node may already be
+  synced, bootnode connectivity may be flat, or the sample window may be too
+  short.
 - `Payment failed`
   The route may be unavailable, the channel may not have enough outbound
   capacity, or the payment target may be wrong.
