@@ -86,15 +86,15 @@ export const DEFAULT_FORM_VALUES = {
   connectPeerTimeoutMs: 5 * 60 * 1000,
   channelReadyTimeoutMs: 15 * 60 * 1000,
   graphSyncTimeoutMs: 15 * 60 * 1000,
-  paymentTimeoutMs: 60 * 60 * 1000,
+  paymentTimeoutMs: 120 * 60 * 1000,
   restartRecoveryTimeoutMs: 5 * 60 * 1000,
   graphSyncRateDurationSeconds: 10 * 60,
   graphSyncRateSampleSeconds: 30,
   localNodeCount: 2
 };
 
-export const MAX_RPC_LOGS = 200;
-export const MAX_FLOW_LOGS = 200;
+export const MAX_RPC_LOGS = 20;
+export const MAX_FLOW_LOGS = 20;
 export const MAX_EXPORT_ARRAY_ITEMS = 20;
 export const MAX_EXPORT_DEPTH = 4;
 export const MAX_EXPORT_STRING_LENGTH = 2000;

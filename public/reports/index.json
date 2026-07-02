@@ -1,7 +1,52 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-06-30T03:08:53.031Z",
+  "updatedAt": "2026-07-02T03:17:29.866Z",
   "reports": [
+    {
+      "runId": "fc0e1973-0bb2-40ce-89cf-c1970e56bc0f",
+      "scenario": "testnet-single",
+      "status": "success",
+      "startedAt": "2026-07-02T03:03:25.056Z",
+      "endedAt": "2026-07-02T03:17:29.703Z",
+      "durationMs": 844647,
+      "generatedAt": "2026-07-02T03:17:29.722Z",
+      "source": "ci",
+      "file": "reports/2026-07-02T03-17-29-722Z-testnet-single-fc0e1973-0bb2-40ce-89cf-c1970e56bc0f.json"
+    },
+    {
+      "runId": "a90584d7-9f57-4bb0-b1f6-85dbbf6685f8",
+      "scenario": "testnet-single",
+      "status": "success",
+      "startedAt": "2026-07-01T03:04:39.654Z",
+      "endedAt": "2026-07-01T03:17:18.421Z",
+      "durationMs": 758767,
+      "generatedAt": "2026-07-01T03:17:18.436Z",
+      "source": "ci",
+      "file": "reports/2026-07-01T03-17-18-436Z-testnet-single-a90584d7-9f57-4bb0-b1f6-85dbbf6685f8.json"
+    },
+    {
+      "runId": "ac5a0f50-60ca-4cc4-b35f-881aa69866c0",
+      "scenario": "testnet-single",
+      "status": "success",
+      "startedAt": "2026-06-30T10:12:22.516Z",
+      "endedAt": "2026-06-30T10:26:24.203Z",
+      "durationMs": 841687,
+      "generatedAt": "2026-06-30T10:26:24.221Z",
+      "source": "ci",
+      "file": "reports/2026-06-30T10-26-24-221Z-testnet-single-ac5a0f50-60ca-4cc4-b35f-881aa69866c0.json"
+    },
+    {
+      "runId": "d0e95ff5-6bd0-40b4-b896-3582dbdb4f1b",
+      "scenario": "testnet-single",
+      "status": "failed",
+      "startedAt": "2026-06-30T08:54:44.985Z",
+      "endedAt": "2026-06-30T09:05:49.327Z",
+      "durationMs": 664342,
+      "lastError": "Dry-run payment kept failing before timeout. Last error: ErrorObject { code: ServerError(-32000), message: \"Send payment error: Failed to build route, PathFind error: no path found\", data: None }",
+      "generatedAt": "2026-06-30T09:05:49.370Z",
+      "source": "ci",
+      "file": "reports/2026-06-30T09-05-49-370Z-testnet-single-d0e95ff5-6bd0-40b4-b896-3582dbdb4f1b.json"
+    },
     {
       "runId": "6e6578b1-f979-4229-96b5-df4318985e5e",
       "scenario": "testnet-single",
