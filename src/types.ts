@@ -1,9 +1,10 @@
 import { FLOW_STEP_DEFINITIONS } from "./constants";
+import type { GraphSyncSample } from "./graphSync";
 
 export type StepId = (typeof FLOW_STEP_DEFINITIONS)[number][0];
 export type StepStatus = "idle" | "running" | "success" | "failed" | "skipped";
 export type LogLevel = "trace" | "debug" | "info" | "error";
-export type FlowScenario = "testnet-single" | "local-multi-node";
+export type FlowScenario = "testnet-single" | "local-multi-node" | "testnet-graph-sync-rate";
 
 export interface FlowStep {
   id: StepId;
@@ -25,6 +26,17 @@ export interface FlowMetrics {
   localRestartRecoveryMs?: number;
   localRestartPaymentMs?: number;
   graphChannelCount?: number;
+  graphNodesCount?: number;
+  listPeersCount?: number;
+  graphChannelsDelta?: number;
+  graphNodesDelta?: number;
+  listPeersDelta?: number;
+  graphChannelsRatePerMinute?: number;
+  graphNodesRatePerMinute?: number;
+  listPeersRatePerMinute?: number;
+  graphSyncSampleCount?: number;
+  graphSyncSampleDurationSeconds?: number;
+  graphSyncSamples?: GraphSyncSample[];
   connectPeerMs?: number;
   channelReadyMs?: number;
   graphSyncMs?: number;
@@ -60,6 +72,8 @@ export interface FlowConfig {
   graphSyncTimeoutMs: number;
   paymentTimeoutMs: number;
   restartRecoveryTimeoutMs: number;
+  graphSyncRateDurationSeconds: number;
+  graphSyncRateSampleSeconds: number;
   scenario: FlowScenario;
   localNodeCount: number;
   localNodes: LocalNodeConfig[];

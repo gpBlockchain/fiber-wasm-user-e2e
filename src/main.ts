@@ -10,6 +10,7 @@ import {
 import { SCENARIO_LESSONS, STEP_LESSONS, type StepLesson } from "./education";
 import { randomSecretKeyHex } from "./fiberClient";
 import { FlowRunner, createRawExportSnapshot } from "./flowRunner";
+import { createGraphSyncChartModel, type GraphSyncChartModel, type GraphSyncSeriesKey } from "./graphSync";
 import {
   createFlowReport,
   createReportIndexEntry,
@@ -37,6 +38,18 @@ let latestReport: FlowReport | undefined;
 const CONFIG_COLLAPSED_STORAGE_KEY = "fiber-wasm-config-collapsed";
 const MAIN_GRID_LAYOUT_STORAGE_KEY = "fiber-wasm-main-grid-layout";
 const savedReportRunIds = new Set<string>();
+const GRAPH_SYNC_SERIES: Array<{
+  key: GraphSyncSeriesKey;
+  label: string;
+  className: "channels" | "nodes" | "peers";
+}> = [
+  { key: "graph_channels", label: "graph_channels", className: "channels" },
+  { key: "graph_nodes", label: "graph_nodes", className: "nodes" },
+  { key: "list_peers", label: "list_peers", className: "peers" }
+];
+const graphSyncVisibleSeries = new Set<GraphSyncSeriesKey>(
+  GRAPH_SYNC_SERIES.map((series) => series.key)
+);
 
 const ckbClient = new ccc.ClientPublicTestnet();
 const urlParams = new URLSearchParams(window.location.search);
@@ -80,26 +93,27 @@ app.innerHTML = `
             Scenario
             <select id="scenario">
               <option value="testnet-single">Testnet single node</option>
+              <option value="testnet-graph-sync-rate">Testnet graph sync rate</option>
               <option value="local-multi-node">Local multi-node</option>
             </select>
           </label>
 
-          <label data-scenario-field="testnet-single">
+          <label data-scenario-field="testnet-single testnet-graph-sync-rate">
             Fiber secret key
             <input id="fiber-secret-key" autocomplete="off" spellcheck="false" />
           </label>
 
-          <label data-scenario-field="testnet-single">
+          <label data-scenario-field="testnet-single testnet-graph-sync-rate">
             CKB secret key
             <input id="ckb-secret-key" autocomplete="off" spellcheck="false" />
           </label>
 
-          <div class="assist-panel" data-scenario-field="testnet-single">
+          <div class="assist-panel" data-scenario-field="testnet-single testnet-graph-sync-rate">
             <span>CKB address</span>
             <code id="ckb-address">--</code>
           </div>
 
-          <div class="field-group" data-scenario-field="testnet-single">
+          <div class="field-group" data-scenario-field="testnet-single testnet-graph-sync-rate">
             <label>
               Database prefix
               <input id="database-prefix" autocomplete="off" />
@@ -118,6 +132,16 @@ app.innerHTML = `
           <label data-scenario-field="testnet-single">
             Peer address
             <input id="peer-address" autocomplete="off" spellcheck="false" placeholder="/ip4/.../tcp/.../ws/p2p/..." />
+          </label>
+
+          <label data-scenario-field="testnet-graph-sync-rate">
+            Graph sample minutes
+            <input id="graph-sync-rate-minutes" inputmode="numeric" />
+          </label>
+
+          <label data-scenario-field="testnet-graph-sync-rate">
+            Graph sample interval (seconds)
+            <input id="graph-sync-rate-sample-seconds" inputmode="numeric" />
           </label>
 
           <label data-scenario-field="testnet-single">
@@ -303,6 +327,8 @@ const elements = {
   deleteIndexedDb: byId<HTMLButtonElement>("delete-indexeddb"),
   peerPubkey: byId<HTMLInputElement>("peer-pubkey"),
   peerAddress: byId<HTMLInputElement>("peer-address"),
+  graphSyncRateMinutes: byId<HTMLInputElement>("graph-sync-rate-minutes"),
+  graphSyncRateSampleSeconds: byId<HTMLInputElement>("graph-sync-rate-sample-seconds"),
   fundingAmount: byId<HTMLInputElement>("funding-amount"),
   paymentTargetPubkey: byId<HTMLInputElement>("payment-target-pubkey"),
   paymentAmount: byId<HTMLInputElement>("payment-amount"),
@@ -344,6 +370,8 @@ type ScenarioDraft = {
   databasePrefix: string;
   peerPubkey: string;
   peerAddress: string;
+  graphSyncRateMinutes: string;
+  graphSyncRateSampleSeconds: string;
   fundingAmount: string;
   paymentTargetPubkey: string;
   paymentAmount: string;
@@ -354,6 +382,7 @@ type ScenarioDraft = {
 
 const scenarioDrafts: Record<FlowScenario, ScenarioDraft> = {
   "testnet-single": createScenarioDraft("testnet-single"),
+  "testnet-graph-sync-rate": createScenarioDraft("testnet-graph-sync-rate"),
   "local-multi-node": createScenarioDraft("local-multi-node")
 };
 type HistoryDisplayItem = {
@@ -408,6 +437,28 @@ elements.ckbSecretKey.addEventListener("input", () => {
 
 elements.localNodesJson.addEventListener("input", () => {
   void renderLocalCkbAddresses();
+});
+
+elements.metrics.addEventListener("change", (event) => {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement)) {
+    return;
+  }
+
+  const series = input.dataset.graphSyncSeries;
+  if (!isGraphSyncSeriesKey(series)) {
+    return;
+  }
+
+  if (input.checked) {
+    graphSyncVisibleSeries.add(series);
+  } else if (graphSyncVisibleSeries.size > 1) {
+    graphSyncVisibleSeries.delete(series);
+  } else {
+    input.checked = true;
+  }
+
+  renderMetricsPanel();
 });
 
 elements.runFlow.addEventListener("click", async () => {
@@ -487,6 +538,14 @@ function readConfig(): FlowConfig {
   const scenario = elements.scenario.value as FlowConfig["scenario"];
   const localNodeCount = Number.parseInt(elements.localNodeCount.value, 10) || DEFAULT_FORM_VALUES.localNodeCount;
   const localNodes = scenario === "local-multi-node" ? readLocalNodes(localNodeCount) : [];
+  const graphSyncRateMinutes = readPositiveInteger(
+    elements.graphSyncRateMinutes.value,
+    DEFAULT_FORM_VALUES.graphSyncRateDurationSeconds / 60
+  );
+  const graphSyncRateSampleSeconds = readPositiveInteger(
+    elements.graphSyncRateSampleSeconds.value,
+    DEFAULT_FORM_VALUES.graphSyncRateSampleSeconds
+  );
 
   if (scenario === "testnet-single" && !peerPubkey) {
     throw new Error("Peer pubkey is required.");
@@ -517,7 +576,9 @@ function readConfig(): FlowConfig {
     channelReadyTimeoutMs: DEFAULT_FORM_VALUES.channelReadyTimeoutMs,
     graphSyncTimeoutMs: DEFAULT_FORM_VALUES.graphSyncTimeoutMs,
     paymentTimeoutMs: DEFAULT_FORM_VALUES.paymentTimeoutMs,
-    restartRecoveryTimeoutMs: DEFAULT_FORM_VALUES.restartRecoveryTimeoutMs
+    restartRecoveryTimeoutMs: DEFAULT_FORM_VALUES.restartRecoveryTimeoutMs,
+    graphSyncRateDurationSeconds: graphSyncRateMinutes * 60,
+    graphSyncRateSampleSeconds
   };
 }
 
@@ -525,6 +586,8 @@ function createScenarioDraft(scenario: FlowScenario): ScenarioDraft {
   const databasePrefix =
     scenario === "local-multi-node"
       ? DEFAULT_FORM_VALUES.localDatabasePrefix
+      : scenario === "testnet-graph-sync-rate"
+        ? DEFAULT_FORM_VALUES.testnetGraphSyncRateDatabasePrefix
       : DEFAULT_FORM_VALUES.testnetDatabasePrefix;
 
   return {
@@ -533,6 +596,8 @@ function createScenarioDraft(scenario: FlowScenario): ScenarioDraft {
     databasePrefix,
     peerPubkey: scenario === "testnet-single" ? DEFAULT_FORM_VALUES.testnetPeerPubkey : "",
     peerAddress: scenario === "testnet-single" ? DEFAULT_FORM_VALUES.testnetPeerAddress : "",
+    graphSyncRateMinutes: String(DEFAULT_FORM_VALUES.graphSyncRateDurationSeconds / 60),
+    graphSyncRateSampleSeconds: String(DEFAULT_FORM_VALUES.graphSyncRateSampleSeconds),
     fundingAmount: DEFAULT_FORM_VALUES.fundingAmount,
     paymentTargetPubkey:
       scenario === "testnet-single" ? DEFAULT_FORM_VALUES.testnetPaymentTargetPubkey : "",
@@ -555,6 +620,8 @@ function saveScenarioDraft(scenario: FlowScenario): void {
     databasePrefix: elements.databasePrefix.value,
     peerPubkey: elements.peerPubkey.value,
     peerAddress: elements.peerAddress.value,
+    graphSyncRateMinutes: elements.graphSyncRateMinutes.value,
+    graphSyncRateSampleSeconds: elements.graphSyncRateSampleSeconds.value,
     fundingAmount: elements.fundingAmount.value,
     paymentTargetPubkey: elements.paymentTargetPubkey.value,
     paymentAmount: elements.paymentAmount.value,
@@ -573,6 +640,8 @@ function loadScenarioDraft(scenario: FlowScenario): void {
   elements.databasePrefix.value = draft.databasePrefix;
   elements.peerPubkey.value = draft.peerPubkey;
   elements.peerAddress.value = draft.peerAddress;
+  elements.graphSyncRateMinutes.value = draft.graphSyncRateMinutes;
+  elements.graphSyncRateSampleSeconds.value = draft.graphSyncRateSampleSeconds;
   elements.fundingAmount.value = draft.fundingAmount;
   elements.paymentTargetPubkey.value = draft.paymentTargetPubkey;
   elements.paymentAmount.value = draft.paymentAmount;
@@ -752,6 +821,22 @@ function normalizeLocalNode(value: unknown, index: number): LocalNodeConfig {
 
 function stringField(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function readPositiveInteger(value: string, fallback: number): number {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function selectedGraphSyncSeries(): GraphSyncSeriesKey[] {
+  const selected = GRAPH_SYNC_SERIES.map((series) => series.key).filter((key) =>
+    graphSyncVisibleSeries.has(key)
+  );
+  return selected.length ? selected : GRAPH_SYNC_SERIES.map((series) => series.key);
+}
+
+function isGraphSyncSeriesKey(value: unknown): value is GraphSyncSeriesKey {
+  return typeof value === "string" && GRAPH_SYNC_SERIES.some((series) => series.key === value);
 }
 
 function isHexSecret(value: string): boolean {
@@ -943,7 +1028,8 @@ function saveMainGridLayout(): void {
 function updateScenarioFields(): void {
   const scenario = elements.scenario.value;
   scenarioFields.forEach((field) => {
-    field.hidden = field.dataset.scenarioField !== scenario;
+    const scenarios = (field.dataset.scenarioField ?? "").split(/\s+/).filter(Boolean);
+    field.hidden = !scenarios.includes(scenario);
   });
 }
 
@@ -1010,6 +1096,11 @@ function renderState(state: FlowRunState): void {
   elements.rawJson.textContent = JSON.stringify(createRawExportSnapshot(state), null, 2);
   renderReportState(state);
   createIcons({ icons });
+}
+
+function renderMetricsPanel(): void {
+  const scenario = latestState?.scenario ?? (elements.scenario.value as FlowConfig["scenario"]);
+  elements.metrics.innerHTML = metricCards(latestState, scenario);
 }
 
 function renderReportState(state: FlowRunState): void {
@@ -1488,6 +1579,21 @@ function metricCards(state?: FlowRunState, scenario: FlowConfig["scenario"] = "t
           ["Restart payment", formatMs(metrics.localRestartPaymentMs)],
           ["Shutdown", formatMs(metrics.shutdownMs)]
         ]
+      : scenario === "testnet-graph-sync-rate"
+        ? [
+            ["Graph channels", valueOrDash(metrics.graphChannelCount)],
+            ["Graph nodes", valueOrDash(metrics.graphNodesCount)],
+            ["List peers", valueOrDash(metrics.listPeersCount)],
+            ["Channel delta", valueOrDash(metrics.graphChannelsDelta)],
+            ["Node delta", valueOrDash(metrics.graphNodesDelta)],
+            ["Peer delta", valueOrDash(metrics.listPeersDelta)],
+            ["Channels/min", valueOrDash(metrics.graphChannelsRatePerMinute)],
+            ["Nodes/min", valueOrDash(metrics.graphNodesRatePerMinute)],
+            ["Peers/min", valueOrDash(metrics.listPeersRatePerMinute)],
+            ["Samples", valueOrDash(metrics.graphSyncSampleCount)],
+            ["Sample window", formatSeconds(metrics.graphSyncSampleDurationSeconds)],
+            ["Graph sampling", formatMs(metrics.graphSyncMs)]
+          ]
       : [
           ["Graph channels", valueOrDash(metrics.graphChannelCount)],
           ["Connect peer", formatMs(metrics.connectPeerMs)],
@@ -1499,7 +1605,7 @@ function metricCards(state?: FlowRunState, scenario: FlowConfig["scenario"] = "t
           ["Shutdown", formatMs(metrics.shutdownMs)]
         ];
 
-  return items
+  const cards = items
     .map(
       ([label, value]) => `
         <div class="metric-tile">
@@ -1509,6 +1615,119 @@ function metricCards(state?: FlowRunState, scenario: FlowConfig["scenario"] = "t
       `
     )
     .join("");
+
+  if (scenario === "testnet-graph-sync-rate") {
+    return `${renderGraphSyncChart(state)}${cards}`;
+  }
+
+  return cards;
+}
+
+function renderGraphSyncChart(state?: FlowRunState): string {
+  const samples = state?.metrics.graphSyncSamples ?? [];
+  const visibleSeries = selectedGraphSyncSeries();
+  const chart = createGraphSyncChartModel(samples, { visibleSeries });
+
+  if (!chart) {
+    return `
+      <section class="graph-sync-chart-card" aria-label="Graph sync live chart">
+        <div class="graph-sync-chart-head">
+          <div>
+            <span>Live graph sync</span>
+            <strong>Waiting for samples</strong>
+          </div>
+          ${renderGraphSyncSeriesControls()}
+        </div>
+        <div class="graph-sync-chart-empty">Run the graph sync rate scenario to draw the live trend.</div>
+      </section>
+    `;
+  }
+
+  const yTicks = [
+    { label: chart.maxValue, y: 18 },
+    { label: Math.round(chart.maxValue / 2), y: chart.height / 2 },
+    { label: 0, y: chart.height - 30 }
+  ];
+
+  return `
+    <section class="graph-sync-chart-card" aria-label="Graph sync live chart">
+      <div class="graph-sync-chart-head">
+        <div>
+          <span>Live graph sync</span>
+          <strong>${samples.length} sample${samples.length === 1 ? "" : "s"}</strong>
+        </div>
+        ${renderGraphSyncSeriesControls(chart)}
+      </div>
+      <svg
+        class="graph-sync-chart"
+        viewBox="0 0 ${chart.width} ${chart.height}"
+        role="img"
+        aria-label="Realtime graph channels and graph nodes line chart"
+        data-chart="graph-sync-rate"
+      >
+        <g class="graph-sync-grid">
+          ${yTicks
+            .map(
+              (tick) => `
+                <line x1="46" y1="${tick.y}" x2="${chart.width - 18}" y2="${tick.y}"></line>
+                <text x="36" y="${tick.y + 4}" text-anchor="end">${escapeHtml(String(tick.label))}</text>
+              `
+            )
+            .join("")}
+        </g>
+        ${
+          chart.channelPolyline
+            ? `<polyline class="graph-sync-line channels" points="${escapeHtml(chart.channelPolyline)}"></polyline>`
+            : ""
+        }
+        ${
+          chart.nodePolyline
+            ? `<polyline class="graph-sync-line nodes" points="${escapeHtml(chart.nodePolyline)}"></polyline>`
+            : ""
+        }
+        ${
+          chart.peerPolyline
+            ? `<polyline class="graph-sync-line peers" points="${escapeHtml(chart.peerPolyline)}"></polyline>`
+            : ""
+        }
+        <g class="graph-sync-axis">
+          <text x="46" y="${chart.height - 8}">0s</text>
+          <text x="${chart.width - 18}" y="${chart.height - 8}" text-anchor="end">${escapeHtml(
+            `${Math.round(chart.maxElapsedSeconds)}s`
+          )}</text>
+        </g>
+      </svg>
+    </section>
+  `;
+}
+
+function renderGraphSyncSeriesControls(chart?: GraphSyncChartModel): string {
+  const counts: Record<GraphSyncSeriesKey, number | undefined> = {
+    graph_channels: chart?.latestChannelCount,
+    graph_nodes: chart?.latestNodeCount,
+    list_peers: chart?.latestListPeersCount
+  };
+
+  return `
+    <div class="chart-series-controls" role="group" aria-label="Visible graph sync data">
+      ${GRAPH_SYNC_SERIES.map((series) => {
+        const checked = graphSyncVisibleSeries.has(series.key);
+        const count = counts[series.key];
+        const label = count === undefined ? series.label : `${series.label} ${count}`;
+        return `
+          <label class="chart-series-toggle ${series.className}">
+            <input
+              type="checkbox"
+              data-graph-sync-series="${series.key}"
+              ${checked ? "checked" : ""}
+            />
+            <i class="legend-line ${series.className}"></i>
+            <span>${escapeHtml(label)}</span>
+          </label>
+        `;
+      }).join("")}
+    </div>
+  `;
 }
 
 function byId<T extends HTMLElement = HTMLElement>(id: string): T {
@@ -1528,6 +1747,13 @@ function formatMs(value?: number): string {
     return "--";
   }
   return `${(value / 1000).toFixed(2)}s`;
+}
+
+function formatSeconds(value?: number): string {
+  if (value === undefined) {
+    return "--";
+  }
+  return `${value}s`;
 }
 
 function valueOrDash(value?: number): string {

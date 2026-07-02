@@ -21,6 +21,12 @@ export const SCENARIO_LESSONS: Record<
     outcome:
       "You should understand which RPC proves each stage and where failures usually point: keys, peer connectivity, on-chain funding, graph gossip, payment routing, or persistence."
   },
+  "testnet-graph-sync-rate": {
+    title: "Testnet graph sync rate path",
+    goal: "Measure how quickly one browser Fiber node learns graph_channels and graph_nodes from testnet gossip after startup.",
+    outcome:
+      "You should understand the node and channel graph baseline, final counts, deltas, and per-minute sync rates without opening channels or sending payments."
+  },
   "local-multi-node": {
     title: "Local multi-node learning path",
     goal: "Run several browser Fiber nodes side by side and compare their peer, channel, graph, payment, and shutdown behavior.",
@@ -84,6 +90,15 @@ export const STEP_LESSONS: Record<StepId, StepLesson> = {
       "Waits until the new public channel is visible in the network graph. Routing depends on this shared graph knowledge.",
     observe: "If the channel is ready but invisible, focus on public channel flags and gossip propagation."
   },
+  "graph-sync-rate": {
+    concept: "Graph sync throughput",
+    rpc:
+      "Sample graph_channels, graph_nodes, and list_peers for the configured window, then compare the first and last counts.",
+    meaning:
+      "Measures how quickly the browser node learns public channels, graph nodes, and active peers from the testnet bootnodes in its Fiber config.",
+    observe:
+      "Watch the channel, node, and peer deltas, per-minute rates, and sample list to separate slow gossip from peer connectivity changes."
+  },
   "send-payment": {
     concept: "Payment routing",
     rpc:
@@ -96,8 +111,8 @@ export const STEP_LESSONS: Record<StepId, StepLesson> = {
     concept: "Lifecycle",
     rpc: "Not JSON-RPC. Call Fiber.stop() in fiber-js to stop the browser node while leaving IndexedDB data in place.",
     meaning:
-      "Stops the browser Fiber node while leaving its IndexedDB state intact. This prepares the restart recovery lesson.",
-    observe: "Stopping should not erase channels when the same database prefix is reused."
+      "Stops the browser Fiber node while leaving its IndexedDB state intact. Later runs can reuse the same database prefix when persistence matters.",
+    observe: "Stopping should end the runtime process without deleting local Fiber state."
   },
   restart: {
     concept: "Persistence",

@@ -8,6 +8,11 @@ import {
 } from "./constants";
 import { FiberClient } from "./fiberClient";
 import { selectPeerConnectionTarget } from "./peerConnection";
+import {
+  summarizeGraphSyncSamples,
+  type GraphSyncSample,
+  type GraphSyncSummary
+} from "./graphSync";
 import type { FlowCallbacks, FlowConfig, FlowRunState, FlowStep, RpcLog, StepId } from "./types";
 
 export class FlowRunner {
@@ -30,6 +35,12 @@ export class FlowRunner {
 
     try {
       assertBrowserIsolation();
+
+      if (config.scenario === "testnet-graph-sync-rate") {
+        await this.runTestnetGraphSyncRate(config);
+        this.log("success", "Testnet graph sync rate scenario finished successfully.");
+        return this.state;
+      }
 
       if (config.scenario === "local-multi-node") {
         await this.runLocalMultiNode(config);
@@ -152,6 +163,73 @@ export class FlowRunner {
   private async channelKeysForClient(client: FiberClient, pubkey: string): Promise<Set<string>> {
     const channels = await client.listChannels(pubkey);
     return new Set(channels.channels.map(channelKey).filter(Boolean));
+  }
+
+  private async runTestnetGraphSyncRate(config: FlowConfig): Promise<void> {
+    await this.runStep("start", () => this.client.startFiber(config));
+
+    const nodeInfo = await this.runStep<Record<string, unknown>>("node-info", () =>
+      this.client.nodeInfo()
+    );
+    this.state.nodePubkey = stringValue(nodeInfo.pubkey);
+
+    await this.runStep("graph-sync-rate", () => this.sampleGraphSyncRate(config));
+    this.state.metrics.graphSyncMs = this.stepDuration("graph-sync-rate");
+
+    await this.runStep("stop", () => this.client.stopFiber());
+  }
+
+  private async sampleGraphSyncRate(config: FlowConfig): Promise<GraphSyncSummary> {
+    const durationSeconds = Math.max(1, config.graphSyncRateDurationSeconds);
+    const sampleIntervalSeconds = Math.max(1, config.graphSyncRateSampleSeconds);
+    const startedMs = performance.now();
+    const deadlineMs = startedMs + durationSeconds * 1000;
+    const samples: GraphSyncSample[] = [];
+
+    while (true) {
+      const nowMs = performance.now();
+      const graphChannels = await this.client.graphChannels();
+      const graphNodes = await this.client.graphNodes();
+      const listPeers = await this.client.listPeers();
+      const sample = {
+        elapsedSeconds: Number(((nowMs - startedMs) / 1000).toFixed(3)),
+        graphChannelsCount: graphChannels.channels.length,
+        graphNodesCount: graphNodes.nodes.length,
+        listPeersCount: listPeers.peers.length
+      };
+      samples.push(sample);
+
+      const summary = summarizeGraphSyncSamples(
+        samples,
+        durationSeconds,
+        sampleIntervalSeconds,
+        "testnet"
+      );
+      this.updateGraphSyncRateMetrics(summary);
+      this.log("info", `Graph sync sample ${samples.length}.`, sample);
+      this.emit();
+
+      if (nowMs >= deadlineMs) {
+        return summary;
+      }
+
+      await wait(Math.min(sampleIntervalSeconds * 1000, Math.max(0, deadlineMs - nowMs)));
+    }
+  }
+
+  private updateGraphSyncRateMetrics(summary: GraphSyncSummary): void {
+    this.state.metrics.graphChannelCount = summary.finalGraphChannelsCount;
+    this.state.metrics.graphNodesCount = summary.finalGraphNodesCount;
+    this.state.metrics.listPeersCount = summary.finalListPeersCount;
+    this.state.metrics.graphChannelsDelta = summary.graphChannelsDelta;
+    this.state.metrics.graphNodesDelta = summary.graphNodesDelta;
+    this.state.metrics.listPeersDelta = summary.listPeersDelta;
+    this.state.metrics.graphChannelsRatePerMinute = summary.graphChannelsRatePerMinute;
+    this.state.metrics.graphNodesRatePerMinute = summary.graphNodesRatePerMinute;
+    this.state.metrics.listPeersRatePerMinute = summary.listPeersRatePerMinute;
+    this.state.metrics.graphSyncSampleCount = summary.samples.length;
+    this.state.metrics.graphSyncSampleDurationSeconds = summary.durationSeconds;
+    this.state.metrics.graphSyncSamples = summary.samples;
   }
 
   private async runLocalMultiNode(config: FlowConfig): Promise<void> {
@@ -555,7 +633,7 @@ export class FlowRunner {
     config: FlowConfig
   ): Promise<Record<string, unknown>> {
     await this.waitForDryRunPaymentWithClient(client, targetPubkey, amount, config);
-    const payment = await client.sendPayment(targetPubkey, amount);
+    const payment = await client.sendPayment(targetPubkey, amount, config.paymentTimeoutMs);
     const paymentHash = stringValue(payment.payment_hash);
 
     return poll(
@@ -585,7 +663,7 @@ export class FlowRunner {
   ): Promise<Record<string, unknown>> {
     return poll(
       async () => {
-        return client.dryRunPayment(targetPubkey, amount);
+        return client.dryRunPayment(targetPubkey, amount, config.paymentTimeoutMs);
       },
       config.paymentTimeoutMs,
       config.pollIntervalMs,

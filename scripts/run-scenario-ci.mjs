@@ -68,6 +68,8 @@ async function applyEnvironmentConfig(page) {
     "#database-prefix": `ci-${scenario}-${today}-${runSuffix}`,
     "#peer-pubkey": process.env.CI_PEER_PUBKEY,
     "#peer-address": process.env.CI_PEER_ADDRESS,
+    "#graph-sync-rate-minutes": process.env.CI_GRAPH_SYNC_RATE_MINUTES,
+    "#graph-sync-rate-sample-seconds": process.env.CI_GRAPH_SYNC_RATE_SAMPLE_SECONDS,
     "#payment-target-pubkey": process.env.CI_PAYMENT_TARGET_PUBKEY,
     "#fiber-secret-key": process.env.CI_FIBER_SECRET_KEY,
     "#ckb-secret-key": process.env.CI_CKB_SECRET_KEY,
