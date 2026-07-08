@@ -1,7 +1,19 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-07T03:06:55.345Z",
+  "updatedAt": "2026-07-08T03:03:39.788Z",
   "reports": [
+    {
+      "runId": "7b07ad43-0f06-4c8c-8a10-a4c48fc4f15f",
+      "scenario": "testnet-single",
+      "status": "failed",
+      "startedAt": "2026-07-08T03:01:28.345Z",
+      "endedAt": "2026-07-08T03:03:39.702Z",
+      "durationMs": 131357,
+      "lastError": "Payment failed: Build payment route error: Failed to build route, PathFind error: no path found",
+      "generatedAt": "2026-07-08T03:03:39.713Z",
+      "source": "ci",
+      "file": "reports/2026-07-08T03-03-39-713Z-testnet-single-7b07ad43-0f06-4c8c-8a10-a4c48fc4f15f.json"
+    },
     {
       "runId": "78776bf9-8bef-4e0d-96e2-61620dd9d800",
       "scenario": "testnet-single",
