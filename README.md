@@ -85,7 +85,7 @@ npm install
 
 ## Test a Local fiber-js Build
 
-The normal dependency is `@nervosnetwork/fiber-js@0.9.0-rc6`. To test a local
+The normal dependency is `@nervosnetwork/fiber-js@0.9.0-rc7`. To test a local
 Fiber branch build, run:
 
 ```bash

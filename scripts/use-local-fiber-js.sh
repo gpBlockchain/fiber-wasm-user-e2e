@@ -3,7 +3,7 @@ set -euo pipefail
 
 FIBER_REPO="${FIBER_REPO:-https://github.com/nervosnetwork/fiber.git}"
 FIBER_BRANCH="${FIBER_BRANCH:-fix/wasm-ckb-rpc-timeout}"
-FIBER_JS_VERSION="${FIBER_JS_VERSION:-0.9.0-rc6}"
+FIBER_JS_VERSION="${FIBER_JS_VERSION:-0.9.0-rc7}"
 INSTALL_WASM_PACK="${INSTALL_WASM_PACK:-auto}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -29,7 +29,7 @@ Environment:
   LOCAL_FIBER_JS_SPEC     npm file spec installed into this app.
                           Default: file:./fiber/fiber-js
   FIBER_JS_VERSION        Published version restored by --restore.
-                          Default: 0.9.0-rc6
+                          Default: 0.9.0-rc7
   INSTALL_WASM_PACK       auto, always, or skip.
                           Default: auto
 EOF
