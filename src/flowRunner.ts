@@ -8,6 +8,7 @@ import {
 } from "./constants";
 import { FiberClient } from "./fiberClient";
 import { selectPeerConnectionTarget } from "./peerConnection";
+import { sendPaymentFlowUntilSuccess } from "./paymentRetry";
 import {
   summarizeGraphSyncSamples,
   type GraphSyncSample,
@@ -632,43 +633,7 @@ export class FlowRunner {
     amount: string,
     config: FlowConfig
   ): Promise<Record<string, unknown>> {
-    await this.waitForDryRunPaymentWithClient(client, targetPubkey, amount, config);
-    const payment = await client.sendPayment(targetPubkey, amount, config.paymentTimeoutMs);
-    const paymentHash = stringValue(payment.payment_hash);
-
-    return poll(
-      async () => {
-        const current = await client.getPayment(paymentHash);
-        if (current.status === "Success") {
-          return current;
-        }
-
-        if (current.status === "Failed") {
-          throw new Error(`Payment failed: ${stringValue(current.failed_error) || "unknown"}`);
-        }
-
-        return undefined;
-      },
-      config.paymentTimeoutMs,
-      config.pollIntervalMs,
-      "Payment did not reach Success before timeout."
-    );
-  }
-
-  private async waitForDryRunPaymentWithClient(
-    client: FiberClient,
-    targetPubkey: string,
-    amount: string,
-    config: FlowConfig
-  ): Promise<Record<string, unknown>> {
-    return poll(
-      async () => {
-        return client.dryRunPayment(targetPubkey, amount, config.paymentTimeoutMs);
-      },
-      config.paymentTimeoutMs,
-      config.pollIntervalMs,
-      "Dry-run payment kept failing before timeout."
-    );
+    return sendPaymentFlowUntilSuccess(client, targetPubkey, amount, config);
   }
 
   private async waitForRestartRecovery(config: FlowConfig): Promise<Record<string, unknown>> {
