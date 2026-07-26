@@ -1,7 +1,19 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-25T03:06:18.472Z",
+  "updatedAt": "2026-07-26T03:06:30.870Z",
   "reports": [
+    {
+      "runId": "a527322f-b0d4-445c-ab25-270a82493a80",
+      "scenario": "testnet-single",
+      "status": "failed",
+      "startedAt": "2026-07-26T03:01:27.357Z",
+      "endedAt": "2026-07-26T03:06:30.727Z",
+      "durationMs": 303370,
+      "lastError": "connect_peer by address returned, but peer 0291a6576bd5a94bd74b27080a48340875338fff9f6d6361fe6b8db8d0d1912fcc did not appear in list_peers before timeout.",
+      "generatedAt": "2026-07-26T03:06:30.735Z",
+      "source": "ci",
+      "file": "reports/2026-07-26T03-06-30-735Z-testnet-single-a527322f-b0d4-445c-ab25-270a82493a80.json"
+    },
     {
       "runId": "832db747-f623-4e23-b1a7-d8a8311c9757",
       "scenario": "testnet-single",
