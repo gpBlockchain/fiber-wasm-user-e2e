@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-31T02:15:10.929Z",
+  "source": "ci",
+  "summary": {
+    "runId": "140764c1-847b-4f09-9f48-ffc85ea76dc1",
+    "scenario": "testnet-single",
+    "status": "success",
+    "startedAt": "2026-08-31T02:07:13.750Z",
+    "endedAt": "2026-08-31T02:15:10.914Z",
+    "durationMs": 477164
+  },
+  "metrics": {
+    "graphChannelCount": 290,
+    "connectPeerMs": 2154,
+    "channelReadyMs": 95134,
+    "graphSyncMs": 882,
+    "sendPaymentMs": 285164,
+    "restartRecoveryMs": 3324,
+    "restartPaymentMs": 2266,
+    "shutdownMs": 83084
+  },
+  "steps": [
+    {
+      "id": "start",
+      "label": "Start WASM Fiber",
+      "status": "success",
+      "startedAt": "2026-08-31T02:07:13.765Z",
+      "endedAt": "2026-08-31T02:07:15.857Z",
+      "durationMs": 2092,
+      "durationSeconds": 2.092
+    },
+    {
+      "id": "node-info",
+      "label": "node_info",
+      "status": "success",
+      "startedAt": "2026-08-31T02:07:15.864Z",
+      "endedAt": "2026-08-31T02:07:15.886Z",
+      "durationMs": 22,
+      "durationSeconds": 0.022
+    },
+    {
+      "id": "graph-channels",
+      "label": "graph_channels",
+      "status": "success",
+      "startedAt": "2026-08-31T02:07:15.893Z",
+      "endedAt": "2026-08-31T02:07:15.928Z",
+      "durationMs": 35,
+      "durationSeconds": 0.035
+    },
+    {
+      "id": "connect-peer",
+      "label": "connect_peer",
+      "status": "success",
+      "startedAt": "2026-08-31T02:07:15.941Z",
+      "endedAt": "2026-08-31T02:07:18.095Z",
+      "durationMs": 2154,
+      "durationSeconds": 2.154
+    },
+    {
+      "id": "open-channel",
+      "label": "open_channel",
+      "status": "success",
+      "startedAt": "2026-08-31T02:07:18.149Z",
+      "endedAt": "2026-08-31T02:07:18.199Z",
+      "durationMs": 50,
+      "durationSeconds": 0.05
+    },
+    {
+      "id": "channel-ready",
+      "label": "Wait ChannelReady",
+      "status": "success",
+      "startedAt": "2026-08-31T02:07:18.215Z",
+      "endedAt": "2026-08-31T02:08:53.349Z",
+      "durationMs": 95134,
+      "durationSeconds": 95.134
+    },
+    {
+      "id": "graph-sync",
+      "label": "Wait graph sync",
+      "status": "success",
+      "startedAt": "2026-08-31T02:08:53.366Z",
+      "endedAt": "2026-08-31T02:08:54.248Z",
+      "durationMs": 882,
+      "durationSeconds": 0.882
+    },
+    {
+      "id": "send-payment",
+      "label": "send_payment",
+      "status": "success",
+      "startedAt": "2026-08-31T02:08:54.278Z",
+      "endedAt": "2026-08-31T02:13:39.442Z",
+      "durationMs": 285164,
+      "durationSeconds": 285.164
+    },
+    {
+      "id": "stop",
+      "label": "Stop Fiber",
+      "status": "success",
+      "startedAt": "2026-08-31T02:13:39.457Z",
+      "endedAt": "2026-08-31T02:13:39.469Z",
+      "durationMs": 12,
+      "durationSeconds": 0.012
+    },
+    {
+      "id": "restart",
+      "label": "Restart Fiber",
+      "status": "success",
+      "startedAt": "2026-08-31T02:13:39.484Z",
+      "endedAt": "2026-08-31T02:13:42.172Z",
+      "durationMs": 2688,
+      "durationSeconds": 2.688
+    },
+    {
+      "id": "restart-recovery",
+      "label": "Recover peers/channels",
+      "status": "success",
+      "startedAt": "2026-08-31T02:13:42.182Z",
+      "endedAt": "2026-08-31T02:13:45.506Z",
+      "durationMs": 3324,
+      "durationSeconds": 3.324
+    },
+    {
+      "id": "restart-payment",
+      "label": "Send payment after restart",
+      "status": "success",
+      "startedAt": "2026-08-31T02:13:45.522Z",
+      "endedAt": "2026-08-31T02:13:47.788Z",
+      "durationMs": 2266,
+      "durationSeconds": 2.266
+    },
+    {
+      "id": "shutdown",
+      "label": "shutdown_channel",
+      "status": "success",
+      "startedAt": "2026-08-31T02:13:47.810Z",
+      "endedAt": "2026-08-31T02:15:10.894Z",
+      "durationMs": 83084,
+      "durationSeconds": 83.084
+    }
+  ]
+}
