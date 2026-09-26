@@ -1,7 +1,18 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-25T02:12:54.665Z",
+  "updatedAt": "2026-09-26T02:13:01.604Z",
   "reports": [
+    {
+      "runId": "ba115ccc-e96e-4db7-83f6-898165d260ad",
+      "scenario": "testnet-single",
+      "status": "success",
+      "startedAt": "2026-09-26T02:06:23.306Z",
+      "endedAt": "2026-09-26T02:13:01.319Z",
+      "durationMs": 398013,
+      "generatedAt": "2026-09-26T02:13:01.332Z",
+      "source": "ci",
+      "file": "reports/2026-09-26T02-13-01-332Z-testnet-single-ba115ccc-e96e-4db7-83f6-898165d260ad.json"
+    },
     {
       "runId": "4d0e1051-29d4-4a4e-92b9-e6712b5f72d2",
       "scenario": "testnet-single",
@@ -983,18 +994,6 @@
       "generatedAt": "2026-06-30T10:26:24.221Z",
       "source": "ci",
       "file": "reports/2026-06-30T10-26-24-221Z-testnet-single-ac5a0f50-60ca-4cc4-b35f-881aa69866c0.json"
-    },
-    {
-      "runId": "d0e95ff5-6bd0-40b4-b896-3582dbdb4f1b",
-      "scenario": "testnet-single",
-      "status": "failed",
-      "startedAt": "2026-06-30T08:54:44.985Z",
-      "endedAt": "2026-06-30T09:05:49.327Z",
-      "durationMs": 664342,
-      "lastError": "Dry-run payment kept failing before timeout. Last error: ErrorObject { code: ServerError(-32000), message: \"Send payment error: Failed to build route, PathFind error: no path found\", data: None }",
-      "generatedAt": "2026-06-30T09:05:49.370Z",
-      "source": "ci",
-      "file": "reports/2026-06-30T09-05-49-370Z-testnet-single-d0e95ff5-6bd0-40b4-b896-3582dbdb4f1b.json"
     }
   ]
 }
