@@ -1,7 +1,18 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-04T02:49:41.041Z",
+  "updatedAt": "2026-10-05T02:27:55.382Z",
   "reports": [
+    {
+      "runId": "a997b7a4-a46f-47d2-a825-83ea9ce059d4",
+      "scenario": "testnet-single",
+      "status": "success",
+      "startedAt": "2026-10-05T02:18:07.307Z",
+      "endedAt": "2026-10-05T02:27:55.331Z",
+      "durationMs": 588024,
+      "generatedAt": "2026-10-05T02:27:55.343Z",
+      "source": "ci",
+      "file": "reports/2026-10-05T02-27-55-343Z-testnet-single-a997b7a4-a46f-47d2-a825-83ea9ce059d4.json"
+    },
     {
       "runId": "b60877cf-62b0-499f-ab8e-464ea981a6e1",
       "scenario": "testnet-single",
@@ -981,18 +992,6 @@
       "generatedAt": "2026-07-08T05:40:51.207Z",
       "source": "ci",
       "file": "reports/2026-07-08T05-40-51-207Z-testnet-single-75365e61-fc6e-4808-b039-692027e2b6b9.json"
-    },
-    {
-      "runId": "cd8d7eab-f728-4fc4-aae0-c0a3c967b60a",
-      "scenario": "testnet-single",
-      "status": "failed",
-      "startedAt": "2026-07-08T03:31:10.086Z",
-      "endedAt": "2026-07-08T03:33:19.461Z",
-      "durationMs": 129375,
-      "lastError": "Payment failed: Build payment route error: Failed to build route, PathFind error: no path found",
-      "generatedAt": "2026-07-08T03:33:19.469Z",
-      "source": "ci",
-      "file": "reports/2026-07-08T03-33-19-469Z-testnet-single-cd8d7eab-f728-4fc4-aae0-c0a3c967b60a.json"
     }
   ]
 }
