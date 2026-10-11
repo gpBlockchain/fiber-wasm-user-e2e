@@ -1,7 +1,18 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-10T02:18:17.350Z",
+  "updatedAt": "2026-10-11T02:22:43.916Z",
   "reports": [
+    {
+      "runId": "1c99613a-9e23-48fe-8872-42348e398d41",
+      "scenario": "testnet-single",
+      "status": "success",
+      "startedAt": "2026-10-11T02:17:03.711Z",
+      "endedAt": "2026-10-11T02:22:43.358Z",
+      "durationMs": 339647,
+      "generatedAt": "2026-10-11T02:22:43.375Z",
+      "source": "ci",
+      "file": "reports/2026-10-11T02-22-43-375Z-testnet-single-1c99613a-9e23-48fe-8872-42348e398d41.json"
+    },
     {
       "runId": "aed43776-a791-4df7-a186-e852e1adc626",
       "scenario": "testnet-single",
@@ -981,17 +992,6 @@
       "generatedAt": "2026-07-14T03:04:35.613Z",
       "source": "ci",
       "file": "reports/2026-07-14T03-04-35-613Z-testnet-single-4ea4f312-ae0d-449a-b020-e98610688797.json"
-    },
-    {
-      "runId": "61158269-c0fe-4879-9979-c93823f6d4da",
-      "scenario": "testnet-single",
-      "status": "success",
-      "startedAt": "2026-07-13T03:01:53.510Z",
-      "endedAt": "2026-07-13T03:06:42.962Z",
-      "durationMs": 289452,
-      "generatedAt": "2026-07-13T03:06:42.979Z",
-      "source": "ci",
-      "file": "reports/2026-07-13T03-06-42-979Z-testnet-single-61158269-c0fe-4879-9979-c93823f6d4da.json"
     }
   ]
 }
