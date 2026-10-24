@@ -1,7 +1,18 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-23T02:16:01.199Z",
+  "updatedAt": "2026-10-24T02:13:19.285Z",
   "reports": [
+    {
+      "runId": "68f9a2e0-8d32-4db7-8ce1-44cb289d9312",
+      "scenario": "testnet-single",
+      "status": "success",
+      "startedAt": "2026-10-24T02:06:27.082Z",
+      "endedAt": "2026-10-24T02:13:19.235Z",
+      "durationMs": 412153,
+      "generatedAt": "2026-10-24T02:13:19.247Z",
+      "source": "ci",
+      "file": "reports/2026-10-24T02-13-19-247Z-testnet-single-68f9a2e0-8d32-4db7-8ce1-44cb289d9312.json"
+    },
     {
       "runId": "629ce173-cefa-47a2-abba-b659d0807aba",
       "scenario": "testnet-single",
@@ -980,18 +991,6 @@
       "generatedAt": "2026-07-27T03:07:48.562Z",
       "source": "ci",
       "file": "reports/2026-07-27T03-07-48-562Z-testnet-single-024ddcda-637b-47ca-bde0-d60150304d61.json"
-    },
-    {
-      "runId": "a527322f-b0d4-445c-ab25-270a82493a80",
-      "scenario": "testnet-single",
-      "status": "failed",
-      "startedAt": "2026-07-26T03:01:27.357Z",
-      "endedAt": "2026-07-26T03:06:30.727Z",
-      "durationMs": 303370,
-      "lastError": "connect_peer by address returned, but peer 0291a6576bd5a94bd74b27080a48340875338fff9f6d6361fe6b8db8d0d1912fcc did not appear in list_peers before timeout.",
-      "generatedAt": "2026-07-26T03:06:30.735Z",
-      "source": "ci",
-      "file": "reports/2026-07-26T03-06-30-735Z-testnet-single-a527322f-b0d4-445c-ab25-270a82493a80.json"
     }
   ]
 }
