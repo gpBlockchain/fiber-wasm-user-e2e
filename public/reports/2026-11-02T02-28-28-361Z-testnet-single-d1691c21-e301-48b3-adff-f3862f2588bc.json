@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-02T02:28:28.361Z",
+  "source": "ci",
+  "summary": {
+    "runId": "d1691c21-e301-48b3-adff-f3862f2588bc",
+    "scenario": "testnet-single",
+    "status": "failed",
+    "startedAt": "2026-11-02T02:04:15.006Z",
+    "endedAt": "2026-11-02T02:28:28.342Z",
+    "durationMs": 1453336,
+    "lastError": "Channel 0xbbf1652a11438e1def011586823f66fe4fd570e06bc054aa4c414576a8847cf8 did not reach Closed before timeout."
+  },
+  "metrics": {
+    "graphChannelCount": 221,
+    "connectPeerMs": 1106,
+    "channelReadyMs": 90447,
+    "graphSyncMs": 618,
+    "sendPaymentMs": 210088,
+    "restartRecoveryMs": 243648,
+    "restartPaymentMs": 1223
+  },
+  "steps": [
+    {
+      "id": "start",
+      "label": "Start WASM Fiber",
+      "status": "success",
+      "startedAt": "2026-11-02T02:04:15.022Z",
+      "endedAt": "2026-11-02T02:04:17.510Z",
+      "durationMs": 2488,
+      "durationSeconds": 2.488
+    },
+    {
+      "id": "node-info",
+      "label": "node_info",
+      "status": "success",
+      "startedAt": "2026-11-02T02:04:17.518Z",
+      "endedAt": "2026-11-02T02:04:17.547Z",
+      "durationMs": 29,
+      "durationSeconds": 0.029
+    },
+    {
+      "id": "graph-channels",
+      "label": "graph_channels",
+      "status": "success",
+      "startedAt": "2026-11-02T02:04:17.555Z",
+      "endedAt": "2026-11-02T02:04:17.587Z",
+      "durationMs": 32,
+      "durationSeconds": 0.032
+    },
+    {
+      "id": "connect-peer",
+      "label": "connect_peer",
+      "status": "success",
+      "startedAt": "2026-11-02T02:04:17.600Z",
+      "endedAt": "2026-11-02T02:04:18.706Z",
+      "durationMs": 1106,
+      "durationSeconds": 1.106
+    },
+    {
+      "id": "open-channel",
+      "label": "open_channel",
+      "status": "success",
+      "startedAt": "2026-11-02T02:04:18.749Z",
+      "endedAt": "2026-11-02T02:04:18.806Z",
+      "durationMs": 57,
+      "durationSeconds": 0.057
+    },
+    {
+      "id": "channel-ready",
+      "label": "Wait ChannelReady",
+      "status": "success",
+      "startedAt": "2026-11-02T02:04:18.819Z",
+      "endedAt": "2026-11-02T02:05:49.266Z",
+      "durationMs": 90447,
+      "durationSeconds": 90.447
+    },
+    {
+      "id": "graph-sync",
+      "label": "Wait graph sync",
+      "status": "success",
+      "startedAt": "2026-11-02T02:05:49.280Z",
+      "endedAt": "2026-11-02T02:05:49.898Z",
+      "durationMs": 618,
+      "durationSeconds": 0.618
+    },
+    {
+      "id": "send-payment",
+      "label": "send_payment",
+      "status": "success",
+      "startedAt": "2026-11-02T02:05:49.916Z",
+      "endedAt": "2026-11-02T02:09:20.004Z",
+      "durationMs": 210088,
+      "durationSeconds": 210.088
+    },
+    {
+      "id": "stop",
+      "label": "Stop Fiber",
+      "status": "success",
+      "startedAt": "2026-11-02T02:09:20.017Z",
+      "endedAt": "2026-11-02T02:09:20.029Z",
+      "durationMs": 12,
+      "durationSeconds": 0.012
+    },
+    {
+      "id": "restart",
+      "label": "Restart Fiber",
+      "status": "success",
+      "startedAt": "2026-11-02T02:09:20.050Z",
+      "endedAt": "2026-11-02T02:09:22.669Z",
+      "durationMs": 2619,
+      "durationSeconds": 2.619
+    },
+    {
+      "id": "restart-recovery",
+      "label": "Recover peers/channels",
+      "status": "success",
+      "startedAt": "2026-11-02T02:09:22.683Z",
+      "endedAt": "2026-11-02T02:13:26.331Z",
+      "durationMs": 243648,
+      "durationSeconds": 243.648
+    },
+    {
+      "id": "restart-payment",
+      "label": "Send payment after restart",
+      "status": "success",
+      "startedAt": "2026-11-02T02:13:26.349Z",
+      "endedAt": "2026-11-02T02:13:27.572Z",
+      "durationMs": 1223,
+      "durationSeconds": 1.223
+    },
+    {
+      "id": "shutdown",
+      "label": "shutdown_channel",
+      "status": "failed",
+      "startedAt": "2026-11-02T02:13:27.588Z",
+      "endedAt": "2026-11-02T02:28:28.332Z",
+      "durationMs": 900744,
+      "durationSeconds": 900.744
+    }
+  ]
+}

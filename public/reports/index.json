@@ -1,7 +1,19 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-01T02:10:17.980Z",
+  "updatedAt": "2026-11-02T02:28:28.431Z",
   "reports": [
+    {
+      "runId": "d1691c21-e301-48b3-adff-f3862f2588bc",
+      "scenario": "testnet-single",
+      "status": "failed",
+      "startedAt": "2026-11-02T02:04:15.006Z",
+      "endedAt": "2026-11-02T02:28:28.342Z",
+      "durationMs": 1453336,
+      "lastError": "Channel 0xbbf1652a11438e1def011586823f66fe4fd570e06bc054aa4c414576a8847cf8 did not reach Closed before timeout.",
+      "generatedAt": "2026-11-02T02:28:28.361Z",
+      "source": "ci",
+      "file": "reports/2026-11-02T02-28-28-361Z-testnet-single-d1691c21-e301-48b3-adff-f3862f2588bc.json"
+    },
     {
       "runId": "8e635d32-f456-491a-b935-9e06a64c84f7",
       "scenario": "testnet-single",
@@ -980,17 +992,6 @@
       "generatedAt": "2026-08-05T03:03:19.222Z",
       "source": "ci",
       "file": "reports/2026-08-05T03-03-19-222Z-testnet-single-220163ab-03de-40fa-b698-0970cb3185dc.json"
-    },
-    {
-      "runId": "3733c293-a7e0-4ebb-82ad-2364737f2fd3",
-      "scenario": "testnet-single",
-      "status": "success",
-      "startedAt": "2026-08-04T03:01:07.399Z",
-      "endedAt": "2026-08-04T03:10:15.236Z",
-      "durationMs": 547837,
-      "generatedAt": "2026-08-04T03:10:15.253Z",
-      "source": "ci",
-      "file": "reports/2026-08-04T03-10-15-253Z-testnet-single-3733c293-a7e0-4ebb-82ad-2364737f2fd3.json"
     }
   ]
 }
