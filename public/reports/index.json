@@ -1,7 +1,19 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-07T02:11:41.308Z",
+  "updatedAt": "2026-11-08T02:19:03.905Z",
   "reports": [
+    {
+      "runId": "8a1244fa-c222-48a7-bdd5-8f0a76d66585",
+      "scenario": "testnet-single",
+      "status": "failed",
+      "startedAt": "2026-11-08T02:03:59.003Z",
+      "endedAt": "2026-11-08T02:19:03.868Z",
+      "durationMs": 904865,
+      "lastError": "New channel did not reach ChannelReady before timeout.",
+      "generatedAt": "2026-11-08T02:19:03.874Z",
+      "source": "ci",
+      "file": "reports/2026-11-08T02-19-03-874Z-testnet-single-8a1244fa-c222-48a7-bdd5-8f0a76d66585.json"
+    },
     {
       "runId": "a06a4278-99d1-40fd-9305-229d1210d38f",
       "scenario": "testnet-single",
@@ -981,17 +993,6 @@
       "generatedAt": "2026-08-11T02:51:03.098Z",
       "source": "ci",
       "file": "reports/2026-08-11T02-51-03-098Z-testnet-single-1d3bbc1c-61f0-4bb5-a96c-7775ef88b97a.json"
-    },
-    {
-      "runId": "7c7a5637-eac4-40c1-a9f9-ce4382c2d4bb",
-      "scenario": "testnet-single",
-      "status": "success",
-      "startedAt": "2026-08-10T02:44:44.153Z",
-      "endedAt": "2026-08-10T02:54:01.220Z",
-      "durationMs": 557067,
-      "generatedAt": "2026-08-10T02:54:01.235Z",
-      "source": "ci",
-      "file": "reports/2026-08-10T02-54-01-235Z-testnet-single-7c7a5637-eac4-40c1-a9f9-ce4382c2d4bb.json"
     }
   ]
 }

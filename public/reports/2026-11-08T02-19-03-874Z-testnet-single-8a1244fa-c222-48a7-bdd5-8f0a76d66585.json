@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-08T02:19:03.874Z",
+  "source": "ci",
+  "summary": {
+    "runId": "8a1244fa-c222-48a7-bdd5-8f0a76d66585",
+    "scenario": "testnet-single",
+    "status": "failed",
+    "startedAt": "2026-11-08T02:03:59.003Z",
+    "endedAt": "2026-11-08T02:19:03.868Z",
+    "durationMs": 904865,
+    "lastError": "New channel did not reach ChannelReady before timeout."
+  },
+  "metrics": {
+    "graphChannelCount": 0,
+    "connectPeerMs": 2100
+  },
+  "steps": [
+    {
+      "id": "start",
+      "label": "Start WASM Fiber",
+      "status": "success",
+      "startedAt": "2026-11-08T02:03:59.014Z",
+      "endedAt": "2026-11-08T02:04:01.299Z",
+      "durationMs": 2285,
+      "durationSeconds": 2.285
+    },
+    {
+      "id": "node-info",
+      "label": "node_info",
+      "status": "success",
+      "startedAt": "2026-11-08T02:04:01.303Z",
+      "endedAt": "2026-11-08T02:04:01.318Z",
+      "durationMs": 15,
+      "durationSeconds": 0.015
+    },
+    {
+      "id": "graph-channels",
+      "label": "graph_channels",
+      "status": "success",
+      "startedAt": "2026-11-08T02:04:01.323Z",
+      "endedAt": "2026-11-08T02:04:01.342Z",
+      "durationMs": 19,
+      "durationSeconds": 0.019
+    },
+    {
+      "id": "connect-peer",
+      "label": "connect_peer",
+      "status": "success",
+      "startedAt": "2026-11-08T02:04:01.350Z",
+      "endedAt": "2026-11-08T02:04:03.450Z",
+      "durationMs": 2100,
+      "durationSeconds": 2.1
+    },
+    {
+      "id": "open-channel",
+      "label": "open_channel",
+      "status": "success",
+      "startedAt": "2026-11-08T02:04:03.477Z",
+      "endedAt": "2026-11-08T02:04:03.517Z",
+      "durationMs": 40,
+      "durationSeconds": 0.04
+    },
+    {
+      "id": "channel-ready",
+      "label": "Wait ChannelReady",
+      "status": "failed",
+      "startedAt": "2026-11-08T02:04:03.529Z",
+      "endedAt": "2026-11-08T02:19:03.863Z",
+      "durationMs": 900334,
+      "durationSeconds": 900.334
+    },
+    {
+      "id": "graph-sync",
+      "label": "Wait graph sync",
+      "status": "skipped"
+    },
+    {
+      "id": "send-payment",
+      "label": "send_payment",
+      "status": "skipped"
+    },
+    {
+      "id": "stop",
+      "label": "Stop Fiber",
+      "status": "skipped"
+    },
+    {
+      "id": "restart",
+      "label": "Restart Fiber",
+      "status": "skipped"
+    },
+    {
+      "id": "restart-recovery",
+      "label": "Recover peers/channels",
+      "status": "skipped"
+    },
+    {
+      "id": "restart-payment",
+      "label": "Send payment after restart",
+      "status": "skipped"
+    },
+    {
+      "id": "shutdown",
+      "label": "shutdown_channel",
+      "status": "skipped"
+    }
+  ]
+}
