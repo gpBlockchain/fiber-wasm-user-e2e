@@ -7,7 +7,7 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "test": "node scripts/test-peer-connection-target.mjs",
+    "test": "node scripts/test-peer-connection-target.mjs && node --test scripts/test-commit-report.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "ci:scenario": "node scripts/run-scenario-ci.mjs",
     "fiber-js:local": "bash scripts/use-local-fiber-js.sh",
