@@ -39,16 +39,7 @@ jobs:
       - name: Commit report
         id: commit_report
         if: always()
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/reports
-          if git diff --cached --quiet; then
-            echo "No report changes to commit."
-            exit 0
-          fi
-          git commit -m "Add daily Fiber WASM scenario report"
-          git push
+        run: bash scripts/commit-report.sh
 
   notify-discord:
     runs-on: ubuntu-22.04
